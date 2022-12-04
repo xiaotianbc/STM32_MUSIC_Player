@@ -1,0 +1,5 @@
+# STM32_MUSIC_Player STM32播放音乐的例程
+设备：`STM32F407ZGT6`单片机
+单身道音频功放+喇叭
+本程序同样也可以作为`STM32F407ZGT6` 的CMake的模板程序
+## 1-TIM+DAC+DMA播放音乐
