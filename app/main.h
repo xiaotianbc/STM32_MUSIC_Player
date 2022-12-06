@@ -24,6 +24,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
+#include "printf.h"
 //#include "core_cm4.h"
 //#include "cmsis_gcc.h"
 

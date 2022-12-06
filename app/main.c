@@ -149,7 +149,7 @@ static void NVIC_Configuration(void) {
     NVIC_InitTypeDef NVIC_InitStructure;
 
     /* Configure the NVIC Preemption Priority Bits */
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+   // NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
     NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;

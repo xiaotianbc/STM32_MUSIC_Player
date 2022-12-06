@@ -63,6 +63,10 @@ include_directories(
         #/*FreeRTOS*/
         middlewares/FreeRTOS-Kernel/include
         middlewares/FreeRTOS-Kernel/portable/GCC/ARM_CM4F
+
+
+        #fatfs
+        middlewares/fatfs_R0.15
    #     Core/Inc Drivers/STM32F4xx_HAL_Driver/Inc Drivers/STM32F4xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32F4xx/Include Drivers/CMSIS/Include)
 )
 #add_definitions(-DUSE_HAL_DRIVER -DSTM32F407xx)
@@ -88,6 +92,9 @@ file(GLOB_RECURSE SOURCES
         middlewares/FreeRTOS-Kernel/timers.c
         middlewares/FreeRTOS-Kernel/portable/GCC/ARM_CM4F/port.c
         middlewares/FreeRTOS-Kernel/portable/MemMang/heap_4.c
+
+        #fatfs
+        middlewares/fatfs_R0.15/*.c
 
 )
 file(GLOB_RECURSE EXCLUDE_SRCS

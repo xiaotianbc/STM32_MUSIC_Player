@@ -8,4 +8,3 @@
 
 void board_led_init(void);
 
-void board_stop_at_led_toggle(void);

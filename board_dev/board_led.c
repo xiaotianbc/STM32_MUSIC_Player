@@ -19,13 +19,3 @@ void board_led_init(void) {
 
 }
 
-/**
- * 开发板上的所有LED灯持续闪烁，程序将会停止在这里，不会返回
- */
-void board_stop_at_led_toggle(void) {
-    while (1) {
-        GPIO_ToggleBits(GPIOG, GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3);
-        Delay(200);
-    }
-
-}

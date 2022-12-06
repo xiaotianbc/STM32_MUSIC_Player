@@ -250,7 +250,9 @@
 /** 
   * @brief  SDIO Static flags, TimeOut, FIFO Address  
   */
+#ifndef NULL
 #define NULL 0
+#endif
 #define SDIO_STATIC_FLAGS               ((uint32_t)0x000005FF)
 #define SDIO_CMD0TIMEOUT                ((uint32_t)0x00010000)
 
@@ -435,6 +437,8 @@ SD_Error SD_Init(void) {
     errorstatus = SD_GetCardInfo(&SDCardInfo);
 
     if (errorstatus == SD_OK) {
+        printf_("GetCardInfo -> Memory capacity:%u MB\n", (uint32_t) (SDCardInfo.CardCapacity >> 20));
+        printf_("            -> CardBlockSize:%d \n", SDCardInfo.CardBlockSize);
         /*----------------- Select Card --------------------------------*/
         errorstatus = SD_SelectDeselect((uint32_t) (SDCardInfo.RCA << 16));
     }

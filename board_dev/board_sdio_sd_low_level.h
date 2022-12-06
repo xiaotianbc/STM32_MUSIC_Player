@@ -6,7 +6,7 @@
 #define F407ZG_GCC_DEMO_BOARD_SDIO_SD_LOW_LEVEL_H
 
 #include <stdint.h>
-
+#include "main.h"
 
 /** @addtogroup STM324xG_EVAL_LOW_LEVEL_SD_FLASH
   * @{
