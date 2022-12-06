@@ -1,6 +1,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_it.h"
 #include "main.h"
+#include "stm324xg_eval_sdio_sd.h"
 
 /** @addtogroup Template_Project
   * @{
@@ -151,6 +152,31 @@ void USART3_IRQHandler(void)
 }
 
 
+/******************************************************************************/
+/*                 STM32F4xx Peripherals Interrupt Handlers                   */
+/******************************************************************************/
+/**
+  * @brief  This function handles SDIO global interrupt request.
+  * @param  None
+  * @retval None
+  */
+void SDIO_IRQHandler(void)
+{
+    /* Process All SDIO Interrupt Sources */
+    SD_ProcessIRQSrc();
+}
+
+/**
+  * @brief  This function handles DMA2 Stream3 or DMA2 Stream6 global interrupts
+  *         requests.
+  * @param  None
+  * @retval None
+  */
+void SD_SDIO_DMA_IRQHANDLER(void)
+{
+    /* Process DMA2 Stream3 or DMA2 Stream6 Interrupt Sources */
+    SD_ProcessDMAIRQ();
+}
 
 #ifdef USE_FULL_ASSERT
 
