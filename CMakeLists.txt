@@ -56,8 +56,13 @@ include_directories(
         mcu_dev
         StLib/CMSIS/Core/Include
         StLib/STM32F4xx_StdPeriph_Driver/inc
-        third_party/littlefs
-        third_party/sfud
+        middlewares/littlefs
+        middlewares/sfud
+        middlewares/printf_
+
+        #/*FreeRTOS*/
+        middlewares/FreeRTOS-Kernel/include
+        middlewares/FreeRTOS-Kernel/portable/GCC/ARM_CM4F
    #     Core/Inc Drivers/STM32F4xx_HAL_Driver/Inc Drivers/STM32F4xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32F4xx/Include Drivers/CMSIS/Include)
 )
 #add_definitions(-DUSE_HAL_DRIVER -DSTM32F407xx)
@@ -69,8 +74,21 @@ file(GLOB_RECURSE SOURCES
         gcc_port/syscalls.c
         mcu_dev/*.*
         StLib/STM32F4xx_StdPeriph_Driver/src/*.*
-        third_party/littlefs/*.*
-        third_party/sfud/*.*
+        middlewares/littlefs/*.*
+        middlewares/sfud/*.*
+        middlewares/printf_/printf.c
+
+        #/*FreeRTOS*/
+        middlewares/FreeRTOS-Kernel/croutine.c
+        middlewares/FreeRTOS-Kernel/event_groups.c
+        middlewares/FreeRTOS-Kernel/list.c
+        middlewares/FreeRTOS-Kernel/queue.c
+        middlewares/FreeRTOS-Kernel/stream_buffer.c
+        middlewares/FreeRTOS-Kernel/tasks.c
+        middlewares/FreeRTOS-Kernel/timers.c
+        middlewares/FreeRTOS-Kernel/portable/GCC/ARM_CM4F/port.c
+        middlewares/FreeRTOS-Kernel/portable/MemMang/heap_4.c
+
 )
 file(GLOB_RECURSE EXCLUDE_SRCS
         StLib/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_fmc.c

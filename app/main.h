@@ -17,20 +17,22 @@
   *
   ******************************************************************************
   */
-  
+
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __MAIN_H
 #define __MAIN_H
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
-#include "tool.h"
+//#include "core_cm4.h"
+//#include "cmsis_gcc.h"
+
 #include "board_led.h"
+#include "printf.h"
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void Delay(__IO uint32_t nTime);
 
 #endif /* __MAIN_H */
 

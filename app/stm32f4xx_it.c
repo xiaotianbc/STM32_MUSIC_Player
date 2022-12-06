@@ -1,25 +1,3 @@
-/**
-  ******************************************************************************
-  * @file    Project/STM32F4xx_StdPeriph_Templates/stm32f4xx_it.c 
-  * @author  MCD Application Team
-  * @version V1.8.1
-  * @date    27-January-2022
-  * @brief   Main Interrupt Service Routines.
-  *          This file provides template for all exceptions handler and 
-  *          peripherals interrupt service routine.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2016 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_it.h"
 #include "main.h"
@@ -99,7 +77,7 @@ void UsageFault_Handler(void)
   {
   }
 }
-
+#if 0
 /**
   * @brief  This function handles SVCall exception.
   * @param  None
@@ -108,7 +86,7 @@ void UsageFault_Handler(void)
 void SVC_Handler(void)
 {
 }
-
+#endif
 /**
   * @brief  This function handles Debug Monitor exception.
   * @param  None
@@ -117,7 +95,7 @@ void SVC_Handler(void)
 void DebugMon_Handler(void)
 {
 }
-
+#if 0
 /**
   * @brief  This function handles PendSVC exception.
   * @param  None
@@ -126,6 +104,7 @@ void DebugMon_Handler(void)
 void PendSV_Handler(void)
 {
 }
+
 static __IO uint32_t uwTimingDelay;
 /**
   * @brief  This function handles SysTick Handler.
@@ -138,17 +117,13 @@ void SysTick_Handler(void)
         uwTimingDelay--;
     }
 }
-
+#endif
 /**
  * @brief  Inserts a delay time.
  * @param  nTime: specifies the delay time length, in milliseconds.
  * @retval None
  */
-void Delay(__IO uint32_t nTime) {
-    uwTimingDelay = nTime;
 
-    while (uwTimingDelay != 0);
-}
 /******************************************************************************/
 /*                 STM32F4xx Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
