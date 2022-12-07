@@ -73,7 +73,7 @@ typedef QWORD FSIZE_t;
 #if FF_LBA64
 typedef QWORD LBA_t;
 #else
-typedef DWORD LBA_t;
+typedef DWORD LBA_t; //LBA:(Logical Block Address),第一区块LBA=0，第二区块LBA=1
 #endif
 #else
 #if FF_LBA64

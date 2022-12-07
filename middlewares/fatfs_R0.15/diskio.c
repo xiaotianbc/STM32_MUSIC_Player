@@ -7,49 +7,38 @@
 /* storage control modules to the FatFs module with a defined API.       */
 /*-----------------------------------------------------------------------*/
 
-#include "ff.h"			/* Obtains integer types */
-#include "diskio.h"		/* Declarations of disk functions */
+#include "ff.h"            /* Obtains integer types */
+#include "diskio.h"        /* Declarations of disk functions */
+#include "stm324xg_eval_sdio_sd.h"
 
 /* Definitions of physical drive number for each drive */
-#define DEV_RAM		0	/* Example: Map Ramdisk to physical drive 0 */
-#define DEV_MMC		1	/* Example: Map MMC/SD card to physical drive 1 */
-#define DEV_USB		2	/* Example: Map USB MSD to physical drive 2 */
+#define DEV_SDIO_TF        0    /* SDIO接口的SD卡 */
 
 
+static SD_Error Status = SD_OK;
 /*-----------------------------------------------------------------------*/
 /* Get Drive Status                                                      */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS disk_status (
-	BYTE pdrv		/* Physical drive nmuber to identify the drive */
-)
-{
-	DSTATUS stat;
-	int result;
+DSTATUS disk_status(
+        BYTE pdrv        /* Physical drive nmuber to identify the drive */
+) {
+    DSTATUS stat;
+    int result;
 
-	switch (pdrv) {
-	case DEV_RAM :
-		result = RAM_disk_status();
+    SDCardState state;
 
-		// translate the reslut code here
-
-		return stat;
-
-	case DEV_MMC :
-		result = MMC_disk_status();
-
-		// translate the reslut code here
-
-		return stat;
-
-	case DEV_USB :
-		result = USB_disk_status();
-
-		// translate the reslut code here
-
-		return stat;
-	}
-	return STA_NOINIT;
+    switch (pdrv) {
+        case DEV_SDIO_TF :
+            state = SD_GetState();
+            if (state != SD_CARD_ERROR && state != SD_CARD_DISCONNECTED)
+                return RES_OK;
+            else
+                return RES_ERROR;
+        default:
+            return RES_ERROR;
+    }
+    return STA_NOINIT;
 }
 
 
@@ -58,36 +47,23 @@ DSTATUS disk_status (
 /* Inidialize a Drive                                                    */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS disk_initialize (
-	BYTE pdrv				/* Physical drive nmuber to identify the drive */
-)
-{
-	DSTATUS stat;
-	int result;
+DSTATUS disk_initialize(
+        BYTE pdrv                /* Physical drive nmuber to identify the drive */
+) {
+    DSTATUS stat;
+    SD_Error result;
 
-	switch (pdrv) {
-	case DEV_RAM :
-		result = RAM_disk_initialize();
-
-		// translate the reslut code here
-
-		return stat;
-
-	case DEV_MMC :
-		result = MMC_disk_initialize();
-
-		// translate the reslut code here
-
-		return stat;
-
-	case DEV_USB :
-		result = USB_disk_initialize();
-
-		// translate the reslut code here
-
-		return stat;
-	}
-	return STA_NOINIT;
+    switch (pdrv) {
+        case DEV_SDIO_TF :
+            result = SD_Init();
+            if (result != SD_OK)
+                return 1;
+            else
+                return 0;
+        default:
+            return 0;
+    }
+    return STA_NOINIT;
 }
 
 
@@ -96,46 +72,36 @@ DSTATUS disk_initialize (
 /* Read Sector(s)                                                        */
 /*-----------------------------------------------------------------------*/
 
-DRESULT disk_read (
-	BYTE pdrv,		/* Physical drive nmuber to identify the drive */
-	BYTE *buff,		/* Data buffer to store read data */
-	LBA_t sector,	/* Start sector in LBA */
-	UINT count		/* Number of sectors to read */
-)
-{
-	DRESULT res;
-	int result;
+DRESULT disk_read(
+        BYTE pdrv,        /* Physical drive nmuber to identify the drive */
+        BYTE *buff,        /* Data buffer to store read data */
+        LBA_t sector,    /* Start sector in LBA */
+        UINT count        /* Number of sectors to read */
+) {
+    DRESULT res;
+    int result;
 
-	switch (pdrv) {
-	case DEV_RAM :
-		// translate the arguments here
+    switch (pdrv) {
+        case DEV_SDIO_TF :
+            // translate the arguments here
+            if (count > 1)//读取多个扇区
+            {
+                Status = SD_ReadMultiBlocks(buff, sector * 512, 512, count);
+            } else {
+                Status = SD_ReadBlock(buff, sector * 512, 512);
+            }
 
-		result = RAM_disk_read(buff, sector, count);
 
-		// translate the reslut code here
+            /* Check if the Transfer is finished */
+            Status = SD_WaitReadOperation();
 
-		return res;
+            /* Wait until end of DMA transfer */
+            while (SD_GetStatus() != SD_TRANSFER_OK);
 
-	case DEV_MMC :
-		// translate the arguments here
+            return (Status == SD_OK) ? RES_OK : RES_ERROR;
+    }
 
-		result = MMC_disk_read(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
-
-	case DEV_USB :
-		// translate the arguments here
-
-		result = USB_disk_read(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
-	}
-
-	return RES_PARERR;
+    return RES_PARERR;
 }
 
 
@@ -146,84 +112,92 @@ DRESULT disk_read (
 
 #if FF_FS_READONLY == 0
 
-DRESULT disk_write (
-	BYTE pdrv,			/* Physical drive nmuber to identify the drive */
-	const BYTE *buff,	/* Data to be written */
-	LBA_t sector,		/* Start sector in LBA */
-	UINT count			/* Number of sectors to write */
-)
-{
-	DRESULT res;
-	int result;
+DRESULT disk_write(
+        BYTE pdrv,            /* Physical drive nmuber to identify the drive */
+        const BYTE *buff,    /* Data to be written */
+        LBA_t sector,        /* Start sector in LBA */
+        UINT count            /* Number of sectors to write */
+) {
+    DRESULT res;
+    int result;
 
-	switch (pdrv) {
-	case DEV_RAM :
-		// translate the arguments here
+    switch (pdrv) {
+        case DEV_SDIO_TF :
+            if (count > 1)//读取多个扇区
+            {
+                Status = SD_WriteMultiBlocks(buff, sector * 512, 512, count);
+            } else {
+                Status = SD_WriteBlock(buff, sector * 512, 512);
+            }
+            /* Check if the Transfer is finished */
+            Status = SD_WaitWriteOperation();
 
-		result = RAM_disk_write(buff, sector, count);
+            /* Wait until end of DMA transfer */
+            while (SD_GetStatus() != SD_TRANSFER_OK);
+            res = (Status == SD_OK) ? RES_OK : RES_ERROR;
 
-		// translate the reslut code here
+            return res;
+    }
 
-		return res;
-
-	case DEV_MMC :
-		// translate the arguments here
-
-		result = MMC_disk_write(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
-
-	case DEV_USB :
-		// translate the arguments here
-
-		result = USB_disk_write(buff, sector, count);
-
-		// translate the reslut code here
-
-		return res;
-	}
-
-	return RES_PARERR;
+    return RES_PARERR;
 }
 
 #endif
 
 
+extern SD_CardInfo SDCardInfo;
+
 /*-----------------------------------------------------------------------*/
 /* Miscellaneous Functions                                               */
 /*-----------------------------------------------------------------------*/
 
-DRESULT disk_ioctl (
-	BYTE pdrv,		/* Physical drive nmuber (0..) */
-	BYTE cmd,		/* Control code */
-	void *buff		/* Buffer to send/receive control data */
-)
-{
-	DRESULT res;
-	int result;
+DRESULT disk_ioctl(
+        BYTE pdrv,        /* Physical drive nmuber (0..) */
+        BYTE cmd,        /* Control code */
+        void *buff        /* Buffer to send/receive control data */
+) {
+    DRESULT res;
+    int result;
 
-	switch (pdrv) {
-	case DEV_RAM :
+    /*
+     *  Generic command (Used by FatFs)
+//#define CTRL_SYNC			0	/* Complete pending write process (needed at FF_FS_READONLY == 0) */
+//#define GET_SECTOR_COUNT	1	/* Get media size (needed at FF_USE_MKFS == 1) */
+//#define GET_SECTOR_SIZE		2	/* Get sector size (needed at FF_MAX_SS != FF_MIN_SS) */
+//#define GET_BLOCK_SIZE		3	/* Get erase block size (needed at FF_USE_MKFS == 1) */
+//#define CTRL_TRIM			4	/* Inform device that the data on the block of sectors is no longer used (needed at FF_USE_TRIM == 1) */
 
-		// Process of the command for the RAM drive
+    switch (pdrv) {
+        case DEV_SDIO_TF :
+            switch (cmd) {
+                case CTRL_SYNC:
+                    return RES_OK;
+                    break;
+                case GET_SECTOR_COUNT:
+                    //把结果保存成uint32_t 保存到buff
+                    *(uint32_t *) buff = (uint32_t) ((uint64_t) SDCardInfo.CardCapacity / 512);
+                    return RES_OK;
+                    break;
+                case GET_SECTOR_SIZE:
+                    *(uint16_t *) buff = 512;
+                    return RES_OK;
+                    break;
+                case GET_BLOCK_SIZE:
+                    *(uint16_t *) buff = 512;
+                    return RES_OK;
+                    break;
+                case CTRL_TRIM:
+                    return RES_OK;
+                    break;
+                default:
+                    return RES_PARERR;
+            }
 
-		return res;
 
-	case DEV_MMC :
+            return res;
 
-		// Process of the command for the MMC/SD card
+    }
 
-		return res;
-
-	case DEV_USB :
-
-		// Process of the command the USB drive
-
-		return res;
-	}
-
-	return RES_PARERR;
+    return RES_PARERR;
 }
 

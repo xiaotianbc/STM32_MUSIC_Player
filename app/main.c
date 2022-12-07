@@ -5,6 +5,7 @@
 #include "task.h"
 #include "common_tool.h"
 #include "stm324xg_eval_sdio_sd.h"
+#include "ff.h"
 
 
 RCC_ClocksTypeDef RCC_Clocks;
@@ -62,7 +63,7 @@ SD_Error Status = SD_OK;
 __IO uint32_t uwSDCardOperation = SD_OPERATION_ERASE;
 
 /* Private function prototypes -----------------------------------------------*/
-static void NVIC_Configuration(void);
+static void SDIO_NVIC_Configuration(void);
 
 static void SD_EraseTest(void);
 
@@ -78,7 +79,7 @@ static TestStatus eBuffercmp(uint8_t *pBuffer, uint32_t BufferLength);
 void sdio_test_main(void *a) {
 
     /* NVIC Configuration */
-    NVIC_Configuration();
+    SDIO_NVIC_Configuration();
 
     /*------------------------------ SD Init ---------------------------------- */
     if ((Status = SD_Init()) != SD_OK) {
@@ -86,30 +87,83 @@ void sdio_test_main(void *a) {
         //  STM_EVAL_LEDOn(LED4);
     }
 
-    while ((Status == SD_OK) && (uwSDCardOperation != SD_OPERATION_END) && (SD_Detect() == SD_PRESENT)) {
-        switch (uwSDCardOperation) {
-            /*-------------------------- SD Erase Test ---------------------------- */
-            case (SD_OPERATION_ERASE): {
-                SD_EraseTest();
-                uwSDCardOperation = SD_OPERATION_BLOCK;
-                break;
-            }
-                /*-------------------------- SD Single Block Test --------------------- */
-            case (SD_OPERATION_BLOCK): {
-                SD_SingleBlockTest();
-                uwSDCardOperation = SD_OPERATION_MULTI_BLOCK;
-                break;
-            }
-                /*-------------------------- SD Multi Blocks Test --------------------- */
-            case (SD_OPERATION_MULTI_BLOCK): {
-                SD_MultiBlockTest();
-                uwSDCardOperation = SD_OPERATION_END;
-                break;
-            }
+
+    switch (uwSDCardOperation) {
+        /*-------------------------- SD Erase Test ---------------------------- */
+        case (SD_OPERATION_ERASE): {
+            SD_EraseTest();
+            uwSDCardOperation = SD_OPERATION_BLOCK;
+            break;
         }
-        vTaskDelay(10);
+            /*-------------------------- SD Single Block Test --------------------- */
+        case (SD_OPERATION_BLOCK): {
+            SD_SingleBlockTest();
+            uwSDCardOperation = SD_OPERATION_MULTI_BLOCK;
+            break;
+        }
+            /*-------------------------- SD Multi Blocks Test --------------------- */
+        case (SD_OPERATION_MULTI_BLOCK): {
+            SD_MultiBlockTest();
+            uwSDCardOperation = SD_OPERATION_END;
+            break;
+        }
+    }
+    while (1) {
+        vTaskDelay(1000);
+    }
+}
+
+FATFS fs;//文件系统对象
+DIR dp1;
+FIL fp;//文件对象
+FILINFO fno;
+char *write_text = "FATFS test success!";
+unsigned int write_bytes = 0;
+char read_buff[512];
+unsigned int read_bytes = 0;
+
+void fatfs_test(void *arg) {
+    FRESULT res;
+    if (FR_OK == f_mount(&fs, "0:", 1))//挂载SD卡到path: 0:，并创建文件系统对象的句柄
+    {
+        printf("mount fs success!\n");
+    }
+    res = f_opendir(&dp1, "0:");
+    if (res != FR_OK) {
+        printf_("f_opendir (&dp1, \"0:\") failed\n");
+        goto endd;
+    }
+    while (1) {
+        res = f_readdir(&dp1, &fno);
+        if (res != FR_OK) {
+            printf_("f_readdir (&dp1, &fno) failed\n");
+            goto endd;
+        }
+        if (strlen(fno.fname) < 1) {
+            printf_("end of dir\n");
+            goto endd;
+        }
+        printf_("file name:%s\n", fno.fname);
+        printf_("file size:%llu\n", fno.fsize);
+        vTaskDelay(1000);
     }
 
+    endd:
+    f_unmount("0:");
+//
+//    res = f_open(&fp, "0:/helloworld.txt", FA_READ | FA_WRITE);//挂载SD卡到path: 0:
+//    if (res == FR_OK) {
+//        f_read(&fp, read_buff, 512, &read_bytes);
+//        if (read_bytes > 0) {
+//            mcu_uart_write(0, (uint8_t *) read_buff, (int) read_bytes);
+//        }
+//        read_bytes = sprintf_(read_buff, "\ngot %d bytes this time\n", read_bytes);
+//        f_write(&fp, read_buff, read_bytes, &read_bytes);    /* Write data to the file */
+//        f_sync(&fp);
+//    }
+    while (1) {
+        vTaskDelay(1000);
+    }
 }
 
 int main(void) {
@@ -120,6 +174,8 @@ int main(void) {
     SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);
 
     mcu_uart_open(PC_PORT);
+    /* NVIC Configuration */
+    SDIO_NVIC_Configuration();
 
 //    xTaskCreate(master_task_main,  /* 任务入口函数 */
 //                "MASTER",    /* 任务名字 */
@@ -127,8 +183,8 @@ int main(void) {
 //                NULL,        /* 任务入口函数参数 */
 //                1,  /* 任务的优先级 */
 //                NULL);  /* 任务控制块指针 */
-    xTaskCreate(sdio_test_main,  /* 任务入口函数 */
-                "sdio_test_main",    /* 任务名字 */
+    xTaskCreate(fatfs_test,  /* 任务入口函数 */
+                "fatfs_test",    /* 任务名字 */
                 4096,    /* 任务栈大小 */
                 NULL,        /* 任务入口函数参数 */
                 1,  /* 任务的优先级 */
@@ -145,11 +201,11 @@ int main(void) {
   * @param  None
   * @retval None
   */
-static void NVIC_Configuration(void) {
+static void SDIO_NVIC_Configuration(void) {
     NVIC_InitTypeDef NVIC_InitStructure;
 
     /* Configure the NVIC Preemption Priority Bits */
-   // NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+    // NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
     NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
