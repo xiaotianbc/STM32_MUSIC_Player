@@ -83,8 +83,10 @@
 /*---------------------------------------------------------------------------/
 / Locale and Namespace Configurations
 /---------------------------------------------------------------------------*/
-
-#define FF_CODE_PAGE	936
+//fatfs使用的OEM代码页，如果使用中文等支持，会大幅度提高flash的占用，这几乎是无法接受的
+// 例如： 设为437整个程序flash占用 33KB，设为936整个程序flash占用 207KB，支持中文文件名额外占用174KB的flash，目前在调试阶段没必要开
+//设置为 437 - U.S. 后，文件和路径名称只能使用ASCII字符
+#define FF_CODE_PAGE	437
 /* This option specifies the OEM code page to be used on the target system.
 /  Incorrect code page setting can cause a file open failure.
 /

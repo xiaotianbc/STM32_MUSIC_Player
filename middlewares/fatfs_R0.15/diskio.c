@@ -23,9 +23,6 @@ static SD_Error Status = SD_OK;
 DSTATUS disk_status(
         BYTE pdrv        /* Physical drive nmuber to identify the drive */
 ) {
-    DSTATUS stat;
-    int result;
-
     SDCardState state;
 
     switch (pdrv) {
@@ -119,15 +116,15 @@ DRESULT disk_write(
         UINT count            /* Number of sectors to write */
 ) {
     DRESULT res;
-    int result;
+
 
     switch (pdrv) {
         case DEV_SDIO_TF :
-            if (count > 1)//读取多个扇区
+            if (count > 1)//单个或者多个扇区使用不同的函数
             {
-                Status = SD_WriteMultiBlocks(buff, sector * 512, 512, count);
+                SD_WriteMultiBlocks(buff, sector * 512, 512, count);
             } else {
-                Status = SD_WriteBlock(buff, sector * 512, 512);
+                SD_WriteBlock(buff, sector * 512, 512);
             }
             /* Check if the Transfer is finished */
             Status = SD_WaitWriteOperation();
@@ -156,8 +153,6 @@ DRESULT disk_ioctl(
         BYTE cmd,        /* Control code */
         void *buff        /* Buffer to send/receive control data */
 ) {
-    DRESULT res;
-    int result;
 
     /*
      *  Generic command (Used by FatFs)
@@ -192,12 +187,8 @@ DRESULT disk_ioctl(
                 default:
                     return RES_PARERR;
             }
-
-
-            return res;
-
+        default:
+            return RES_PARERR;
     }
-
-    return RES_PARERR;
 }
 

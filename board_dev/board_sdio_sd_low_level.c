@@ -11,9 +11,8 @@
   * @param  None
   * @retval None
   */
-void SD_LowLevel_DeInit(void)
-{
-    GPIO_InitTypeDef  GPIO_InitStructure;
+void SD_LowLevel_DeInit(void) {
+    GPIO_InitTypeDef GPIO_InitStructure;
 
     /*!< Disable SDIO Clock */
     SDIO_ClockCmd(DISABLE);
@@ -55,9 +54,8 @@ void SD_LowLevel_DeInit(void)
   * @param  None
   * @retval None
   */
-void SD_LowLevel_Init(void)
-{
-    GPIO_InitTypeDef  GPIO_InitStructure;
+void SD_LowLevel_Init(void) {
+    GPIO_InitTypeDef GPIO_InitStructure;
 
     /* GPIOC and GPIOD Periph clock enable */
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | SD_DETECT_GPIO_CLK, ENABLE);
@@ -97,6 +95,8 @@ void SD_LowLevel_Init(void)
 
     /* Enable the DMA2 Clock */
     RCC_AHB1PeriphClockCmd(SD_SDIO_DMA_CLK, ENABLE);
+
+    SDIO_NVIC_Configuration();//初始化SDIO的中断控制器
 }
 
 /**
@@ -105,11 +105,12 @@ void SD_LowLevel_Init(void)
   * @param  BufferSize: buffer size
   * @retval None
   */
-void SD_LowLevel_DMA_TxConfig(uint32_t *BufferSRC, uint32_t BufferSize)
-{
+void SD_LowLevel_DMA_TxConfig(uint32_t *BufferSRC, uint32_t BufferSize) {
     DMA_InitTypeDef SDDMA_InitStructure;
 
-    DMA_ClearFlag(SD_SDIO_DMA_STREAM, SD_SDIO_DMA_FLAG_FEIF | SD_SDIO_DMA_FLAG_DMEIF | SD_SDIO_DMA_FLAG_TEIF | SD_SDIO_DMA_FLAG_HTIF | SD_SDIO_DMA_FLAG_TCIF);
+    DMA_ClearFlag(SD_SDIO_DMA_STREAM,
+                  SD_SDIO_DMA_FLAG_FEIF | SD_SDIO_DMA_FLAG_DMEIF | SD_SDIO_DMA_FLAG_TEIF | SD_SDIO_DMA_FLAG_HTIF |
+                  SD_SDIO_DMA_FLAG_TCIF);
 
     /* DMA2 Stream3  or Stream6 disable */
     DMA_Cmd(SD_SDIO_DMA_STREAM, DISABLE);
@@ -118,8 +119,8 @@ void SD_LowLevel_DMA_TxConfig(uint32_t *BufferSRC, uint32_t BufferSize)
     DMA_DeInit(SD_SDIO_DMA_STREAM);
 
     SDDMA_InitStructure.DMA_Channel = SD_SDIO_DMA_CHANNEL;
-    SDDMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)SDIO_FIFO_ADDRESS;
-    SDDMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)BufferSRC;
+    SDDMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t) SDIO_FIFO_ADDRESS;
+    SDDMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) BufferSRC;
     SDDMA_InitStructure.DMA_DIR = DMA_DIR_MemoryToPeripheral;
     SDDMA_InitStructure.DMA_BufferSize = BufferSize;
     SDDMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
@@ -147,11 +148,12 @@ void SD_LowLevel_DMA_TxConfig(uint32_t *BufferSRC, uint32_t BufferSize)
   * @param  BufferSize: buffer size
   * @retval None
   */
-void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize)
-{
+void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize) {
     DMA_InitTypeDef SDDMA_InitStructure;
 
-    DMA_ClearFlag(SD_SDIO_DMA_STREAM, SD_SDIO_DMA_FLAG_FEIF | SD_SDIO_DMA_FLAG_DMEIF | SD_SDIO_DMA_FLAG_TEIF | SD_SDIO_DMA_FLAG_HTIF | SD_SDIO_DMA_FLAG_TCIF);
+    DMA_ClearFlag(SD_SDIO_DMA_STREAM,
+                  SD_SDIO_DMA_FLAG_FEIF | SD_SDIO_DMA_FLAG_DMEIF | SD_SDIO_DMA_FLAG_TEIF | SD_SDIO_DMA_FLAG_HTIF |
+                  SD_SDIO_DMA_FLAG_TCIF);
 
     /* DMA2 Stream3  or Stream6 disable */
     DMA_Cmd(SD_SDIO_DMA_STREAM, DISABLE);
@@ -160,8 +162,8 @@ void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize)
     DMA_DeInit(SD_SDIO_DMA_STREAM);
 
     SDDMA_InitStructure.DMA_Channel = SD_SDIO_DMA_CHANNEL;
-    SDDMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)SDIO_FIFO_ADDRESS;
-    SDDMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)BufferDST;
+    SDDMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t) SDIO_FIFO_ADDRESS;
+    SDDMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t) BufferDST;
     SDDMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
     SDDMA_InitStructure.DMA_BufferSize = BufferSize;
     SDDMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
@@ -180,4 +182,25 @@ void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize)
 
     /* DMA2 Stream3 or Stream6 enable */
     DMA_Cmd(SD_SDIO_DMA_STREAM, ENABLE);
+}
+
+/**
+  * @brief  Configures SDIO IRQ channel.
+  * @param  None
+  * @retval None
+  */
+void SDIO_NVIC_Configuration(void) {
+    NVIC_InitTypeDef NVIC_InitStructure;
+
+    /* Configure the NVIC Preemption Priority Bits */
+    // NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+
+    NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+    NVIC_InitStructure.NVIC_IRQChannel = SD_SDIO_DMA_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_Init(&NVIC_InitStructure);
 }

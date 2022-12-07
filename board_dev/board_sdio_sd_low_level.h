@@ -62,4 +62,5 @@ void SD_LowLevel_Init(void);
 void SD_LowLevel_DMA_TxConfig(uint32_t *BufferSRC, uint32_t BufferSize);
 void SD_LowLevel_DMA_RxConfig(uint32_t *BufferDST, uint32_t BufferSize);
 
+void SDIO_NVIC_Configuration(void);
 #endif //F407ZG_GCC_DEMO_BOARD_SDIO_SD_LOW_LEVEL_H
