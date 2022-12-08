@@ -40,7 +40,7 @@ typedef enum {
 } TestStatus;
 
 /* Private functions ---------------------------------------------------------*/
-TestStatus Buffercmp(uint8_t *pBuffer1, uint8_t *pBuffer2, uint16_t BufferLength);
+TestStatus buffercmp(uint8_t *pBuffer1, uint8_t *pBuffer2, uint16_t BufferLength);
 
 
 

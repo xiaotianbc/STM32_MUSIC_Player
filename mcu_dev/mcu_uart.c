@@ -19,8 +19,7 @@ volatile uint8_t UartBuf3OverFg = 0;//缓冲溢出标志
  *@param[out]  无
  *@retval:     
  */
-int32_t mcu_uart_open(int32_t comport)
-{
+int32_t mcu_uart_open(int32_t comport) {
     GPIO_InitTypeDef GPIO_InitStructure;
     USART_InitTypeDef USART_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -32,11 +31,11 @@ int32_t mcu_uart_open(int32_t comport)
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
     // 打开串口时钟
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
-	//GPIOB10 复用为 USART3
+    //GPIOB10 复用为 USART3
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource10, GPIO_AF_USART3);
     //GPIOB11 复用为 USART3
     GPIO_PinAFConfig(GPIOB, GPIO_PinSource11, GPIO_AF_USART3);
-    
+
     // TXD ---- PB10
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;        //复用
@@ -66,13 +65,14 @@ int32_t mcu_uart_open(int32_t comport)
     USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);//开启中断
     //Usart3 NVIC 配置，主要是配置中断优先级
     NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority=3;//抢占优先级 3
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority =3; //响应优先级 3
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;//抢占优先级 3
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3; //响应优先级 3
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //使能中断
     NVIC_Init(&NVIC_InitStructure); //执行NVIC配置
- 
+
     return (0);
 }
+
 /**
  *@brief:      mcu_uart_close
  *@details:    关闭串口
@@ -80,8 +80,7 @@ int32_t mcu_uart_open(int32_t comport)
  *@param[out]  无
  *@retval:     
  */
-int32_t mcu_uart_close (int32_t comport)
-{
+int32_t mcu_uart_close(int32_t comport) {
 
     UartHead3 = 0;
     UartEnd3 = 0;
@@ -89,8 +88,9 @@ int32_t mcu_uart_close (int32_t comport)
     USART_Cmd(USART3, DISABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, DISABLE);
 
-    return(0);
+    return (0);
 }
+
 /**
  *@brief:      mcu_uart_tcflush
  *@details:    清串口接收缓冲
@@ -98,12 +98,12 @@ int32_t mcu_uart_close (int32_t comport)
  *@param[out]  无
  *@retval:     
  */
-int32_t mcu_uart_tcflush(int32_t comport)
-{ 
+int32_t mcu_uart_tcflush(int32_t comport) {
     UartHead3 = UartEnd3;
 
     return 0;
 }
+
 /**
  *@brief:      mcu_uart_set_baud
  *@details:       设置串口波特率
@@ -116,15 +116,15 @@ int32_t mcu_uart_tcflush(int32_t comport)
  *@param[out]  无
  *@retval:     
  */
-int32_t mcu_uart_set_baud (int32_t comport, int32_t baud, int32_t databits, int32_t parity, int32_t stopbits, int32_t flowctl)
-{
+int32_t
+mcu_uart_set_baud(int32_t comport, int32_t baud, int32_t databits, int32_t parity, int32_t stopbits, int32_t flowctl) {
     USART_InitTypeDef USART_InitStructure;
 
-    if( mcu_uart_open (comport) == -1) return(-1);
-    
+    if (mcu_uart_open(comport) == -1) return (-1);
+
     // 关闭串口
     USART_Cmd(USART3, DISABLE);
-    USART_InitStructure.USART_BaudRate = baud; 
+    USART_InitStructure.USART_BaudRate = baud;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
     USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -133,10 +133,11 @@ int32_t mcu_uart_set_baud (int32_t comport, int32_t baud, int32_t databits, int3
     USART_Init(USART3, &USART_InitStructure);
     // 打开串口
     mcu_uart_tcflush(comport);
-    USART_Cmd(USART3, ENABLE); 
+    USART_Cmd(USART3, ENABLE);
 
     return 0;
 }
+
 /**
  *@brief:      mcu_uart_read
  *@details:    读串口数据
@@ -146,31 +147,29 @@ int32_t mcu_uart_set_baud (int32_t comport, int32_t baud, int32_t databits, int3
  *@param[out]  无
  *@retval:     
  */
-int32_t mcu_uart_read (int32_t comport, uint8_t *buf, int32_t len)
-{
+int32_t mcu_uart_read(int32_t comport, uint8_t *buf, int32_t len) {
     int32_t i;
-    
-    if(len <= 0) return(-1);
-    if(buf == NULL) return(-1);
+
+    if (len <= 0) return (-1);
+    if (buf == NULL) return (-1);
 
     i = 0;
 
     //uart_printf("rec index:%d, %d\r\n", UartHead3, rec_end3);
-    while(UartHead3 != UartEnd3)
-    {
+    while (UartHead3 != UartEnd3) {
         *buf = UartBuf3[UartHead3++];
-        if(UartHead3 >= RX3_TEMP_BUF_LEN_MAX) 
+        if (UartHead3 >= RX3_TEMP_BUF_LEN_MAX)
             UartHead3 = 0;
 
-        buf ++;
-        i ++;
-        if(i >= len)
-        {
+        buf++;
+        i++;
+        if (i >= len) {
             break;
         }
-  }
-  return (i);
+    }
+    return (i);
 }
+
 /**
  *@brief:      mcu_uart_write
  *@details:    写串口数据
@@ -180,72 +179,76 @@ int32_t mcu_uart_read (int32_t comport, uint8_t *buf, int32_t len)
  *@param[out]  无
  *@retval:     
  */
-int32_t mcu_uart_write (int32_t comport, uint8_t *buf, int32_t len)
-{
+int32_t mcu_uart_write(int32_t comport, uint8_t *buf, int32_t len) {
     u32 t;
     u16 ch;
-  
-    if (len <= 0) 
-        return(-1);
-        
-    if(buf == NULL) 
-        return(-1);
- 
-    while(len != 0)
-    {
+
+    if (len <= 0)
+        return (-1);
+
+    if (buf == NULL)
+        return (-1);
+
+    while (len != 0) {
         t = 0;
-		// 等待串口发送完毕
-        while(USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET)
-        {
-            if(t++ >= 0x1000000)//超时
-                return(-1);
-        }  
-        ch = (u16)(*buf & 0xff);
+        // 等待串口发送完毕
+        while (USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET) {
+            if (t++ >= 0x1000000)//超时
+                return (-1);
+        }
+        ch = (u16) (*buf & 0xff);
         USART_SendData(USART3, ch);
         buf++;
         len--;
     }
-    
-    return(0);
+
+    return (0);
 }
-/**
- *@brief:      mcu_uart3_IRQhandler
- *@details:    串口中断处理函数
- *@param[in]   void  
- *@param[out]  无
- *@retval:     
- */
-void mcu_uart3_IRQhandler(void)
-{
+
+int32_t mcu_uart_sendstr(char *buf) {
+    u32 t;
+    u16 ch;
+
+    if (buf == NULL)
+        return (-1);
+
+    while (*buf != 0) {
+        // 等待串口发送完毕
+        while (USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET) {
+        }
+        USART_SendData(USART3, *buf);
+        buf++;
+    }
+    return (0);
+}
+
+
+void USART3_IRQHandler(void) {
     unsigned short ch;
 
-    if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)//判断是不是RXNE中断
+    if (USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)//判断是不是RXNE中断
     {
         USART_ClearITPendingBit(USART3, USART_IT_RXNE);//清RX中断
-        if(USART_GetITStatus(USART3, USART_IT_ORE) != RESET)
-        {
+        if (USART_GetITStatus(USART3, USART_IT_ORE) != RESET) {
             // 串口数据接收字符有丢失
             //wjq_log(LOG_DEBUG, "1");
             ch = USART_ReceiveData(USART3);
             USART_GetITStatus(USART3, USART_IT_ORE); // 清除ORE标记
             UartEnd3 = UartHead3;
             UartBuf3OverFg = 1;
-        }
-        else
-        {
+        } else {
             ch = USART_ReceiveData(USART3);
             //uart_printf("%02x", ch);
-            UartBuf3[UartEnd3++] = (unsigned char)(ch&0xff);
-            if(UartEnd3 >= RX3_TEMP_BUF_LEN_MAX)
+            UartBuf3[UartEnd3++] = (unsigned char) (ch & 0xff);
+            if (UartEnd3 >= RX3_TEMP_BUF_LEN_MAX)
                 UartEnd3 = 0;
-                
-            if(UartEnd3 == UartHead3)       // 串口接收缓冲溢出了
+
+            if (UartEnd3 == UartHead3)       // 串口接收缓冲溢出了
                 UartBuf3OverFg = 1;
         }
     }
-    
-    if(USART_GetITStatus(USART3, USART_IT_FE) != RESET)
-    {
+
+    if (USART_GetITStatus(USART3, USART_IT_FE) != RESET) {
         /* Clear the USART3 Frame error pending bit */
         USART_ClearITPendingBit(USART3, USART_IT_FE);
         USART_ReceiveData(USART3);
@@ -276,7 +279,7 @@ void mcu_uart3_IRQhandler(void)
         USART_ClearITPendingBit(USART3, USART_IT_NE);
         USART_ReceiveData(USART3);
     }
-#endif    
+#endif
 }
 
 /**
@@ -286,17 +289,16 @@ void mcu_uart3_IRQhandler(void)
  *@param[out]  无
  *@retval:     
  */
-void mcu_uart_test(void)
-{
+void mcu_uart_test(void) {
     uint8_t buf[12];
     int32_t len;
     int32_t res;
-    
-    len =  mcu_uart_read (3, buf, 10);
+
+    len = mcu_uart_read(3, buf, 10);
     wjq_log(LOG_FUN, "mcu_dev_uart_read :%d\r\n", len);
     res = mcu_uart_write(3, buf, len);
     wjq_log(LOG_FUN, "mcu_dev_uart_write res: %d\r\n", res);
-    wjq_log(LOG_FUN, "%s,%s,%d,%s\r\n", __FUNCTION__,__FILE__,__LINE__,__DATE__);
-    
+    wjq_log(LOG_FUN, "%s,%s,%d,%s\r\n", __FUNCTION__, __FILE__, __LINE__, __DATE__);
+
 }
 

@@ -145,11 +145,7 @@ void SysTick_Handler(void)
   * @}
   */
 
-extern void mcu_uart3_IRQhandler();
-void USART3_IRQHandler(void)
-{
-   // mcu_uart3_IRQhandler();
-}
+
 
 
 /******************************************************************************/

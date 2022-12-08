@@ -1,2 +1,3 @@
 /build/
 MDK_ARM/Objects
+/middlewares/CherryUSB/

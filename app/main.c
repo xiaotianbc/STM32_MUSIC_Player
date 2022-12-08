@@ -51,8 +51,47 @@ char *write_text = "FATFS test success!";
 unsigned int write_bytes = 0;
 char read_buff[512];
 unsigned int read_bytes = 0;
+char current_dir_str[256] = {0};
 
+char fatfs_test_command_paste_buffer[512];
 void fatfs_test(void *arg) {
+    int32_t uart_caches_len;
+    size_t ret;
+    while (1) {
+        uart_caches_len = mcu_uart_read(0, read_buff, 512);
+
+        if (uart_caches_len == 0) {
+            vTaskDelay(100);
+            continue;
+        }
+        if (uart_caches_len >= 4 && 0 == strncmp(read_buff, "help", 4)) {
+            printf_("STM32 command line ctrl interface:\n");
+            printf_("you can use some command like:\n");
+            printf_("pwd, ls, cat, echo, rm, touch, mkdir, free \n");
+        }
+        if (uart_caches_len >= 5 && 0 == strncmp(read_buff, "mount", 5)) {
+            printf_("got mount CMD\n");
+        }
+        if (uart_caches_len >= 3 && 0 == strncmp(read_buff, "off", 3)) {
+            printf_("got off CMD\n");
+        }
+        if (uart_caches_len >= 4 && 0 == strncmp(read_buff, "free", 4)) {
+            ret = xPortGetMinimumEverFreeHeapSize();
+            printf_("free mem: %d B\n", ret);
+        }
+        if (uart_caches_len >= 5 && 0 == strncmp(read_buff, "water", 5)) {
+            ret = uxTaskGetStackHighWaterMark(NULL);
+            printf_("the minimun value in history of task's stack size remain is  %d B\n", ret);
+        }
+        if (uart_caches_len >= 3 && 0 == strncmp(read_buff, "top", 3)) {
+            mcu_uart_sendstr("******* TaskList ********\n");
+            mcu_uart_sendstr("name * state * priority * free-stack * create-order\n");
+            vTaskList(fatfs_test_command_paste_buffer);
+            printf_("%s\n", fatfs_test_command_paste_buffer);
+           // vTaskGetRunTimeState()
+        }
+    }
+
     FRESULT res;
     if (FR_OK == f_mount(&fs, "0:", 1))//挂载SD卡到path: 0:，并创建文件系统对象的句柄
     {
@@ -96,13 +135,25 @@ void fatfs_test(void *arg) {
     }
 }
 
+
+
+/* USER CODE BEGIN PV */
+/* Private variables ---------------------------------------------------------*/
+HeapRegion_t xHeapRegions[] =
+        {
+                //stm32F407-CCMRAM
+                {(uint8_t *) 0x10000000UL, 0x10000},
+                {NULL,                     0}
+        };
+
+/* USER CODE END PV */
+
 int main(void) {
     //4位抢占优先级，0位相应优先级
     __NVIC_SetPriorityGrouping(NVIC_PriorityGroup_4);
     /* SysTick end of count event each ms */
     RCC_GetClocksFreq(&RCC_Clocks);
     SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);
-
     mcu_uart_open(PC_PORT);
 
 //    xTaskCreate(master_task_main,  /* 任务入口函数 */
@@ -111,6 +162,7 @@ int main(void) {
 //                NULL,        /* 任务入口函数参数 */
 //                1,  /* 任务的优先级 */
 //                NULL);  /* 任务控制块指针 */
+    vPortDefineHeapRegions(xHeapRegions);
     xTaskCreate(fatfs_test,  /* 任务入口函数 */
                 "fatfs_test",    /* 任务名字 */
                 4096,    /* 任务栈大小 */
@@ -118,10 +170,5 @@ int main(void) {
                 1,  /* 任务的优先级 */
                 NULL);  /* 任务控制块指针 */
     vTaskStartScheduler();
-    while (1) {
-        printf_("Hello, world\n");
-    }
+    for (;;) {}
 }
-
-
-

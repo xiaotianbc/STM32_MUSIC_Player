@@ -45,7 +45,9 @@
 #define configUSE_APPLICATION_TASK_TAG	0
 #define configUSE_COUNTING_SEMAPHORES	1
 #define configGENERATE_RUN_TIME_STATS	0
-
+#define configUSE_NEWLIB_REENTRANT      1
+#define configUSE_TRACE_FACILITY 1
+#define configUSE_STATS_FORMATTING_FUNCTIONS 1
 
 
 /* Co-routine definitions. */
@@ -69,6 +71,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelay				1
 
 #define INCLUDE_xTaskGetCurrentTaskHandle   1
+#define INCLUDE_uxTaskGetStackHighWaterMark 1
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS

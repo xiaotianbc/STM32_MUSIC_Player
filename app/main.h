@@ -27,12 +27,13 @@
 #include "printf.h"
 //#include "core_cm4.h"
 //#include "cmsis_gcc.h"
-
+#include "common_tool.h"
 #include "board_led.h"
 #include "printf.h"
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
+#define ATCCM __attribute__((section (".ccmram")))
 /* Exported functions ------------------------------------------------------- */
 
 #endif /* __MAIN_H */

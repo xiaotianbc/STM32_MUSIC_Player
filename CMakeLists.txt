@@ -91,7 +91,7 @@ file(GLOB_RECURSE SOURCES
         middlewares/FreeRTOS-Kernel/tasks.c
         middlewares/FreeRTOS-Kernel/timers.c
         middlewares/FreeRTOS-Kernel/portable/GCC/ARM_CM4F/port.c
-        middlewares/FreeRTOS-Kernel/portable/MemMang/heap_4.c
+        middlewares/FreeRTOS-Kernel/portable/MemMang/heap_5.c
 
         #fatfs
         middlewares/fatfs_R0.15/*.c
