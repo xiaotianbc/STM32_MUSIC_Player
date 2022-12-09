@@ -4,7 +4,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "ff.h"
-
+#include "FreeRTOS_CLI_Public.h"
 
 RCC_ClocksTypeDef RCC_Clocks;
 
@@ -166,9 +166,7 @@ int main(void) {
 //                NULL);  /* 任务控制块指针 */
     vPortDefineHeapRegions(xHeapRegions);
 
-    extern void vRegisterSampleCLICommands( void );
     vRegisterSampleCLICommands();
-    extern void vUARTCommandConsoleStart( uint16_t usStackSize, UBaseType_t uxPriority );
     vUARTCommandConsoleStart( 512, 1 );
 
     xTaskCreate(master_task_main,  /* 任务入口函数 */

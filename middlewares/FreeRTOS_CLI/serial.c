@@ -4,7 +4,7 @@
  */
 
 /*
-	BASIC INTERRUPT DRIVEN SERIAL PORT DRIVER FOR UART0.
+本节代码提供了一个基本的基于中断的调试串口驱动
 */
 
 /* Scheduler includes. */
@@ -35,7 +35,7 @@ static QueueHandle_t xCharsForTx; //发送字符队列，需要发送的字符�
 /*-----------------------------------------------------------*/
 
 /* UART interrupt handler. */
-void vUARTInterruptHandler(void);
+//void vUARTInterruptHandler(void);
 
 /*-----------------------------------------------------------*/
 
@@ -44,9 +44,6 @@ void vUARTInterruptHandler(void);
  */
 xComPortHandle xSerialPortInitMinimal(unsigned long ulWantedBaud, unsigned portBASE_TYPE uxQueueLength) {
     xComPortHandle xReturn = 0;
-    USART_InitTypeDef USART_InitStructure;
-    NVIC_InitTypeDef NVIC_InitStructure;
-    GPIO_InitTypeDef GPIO_InitStructure;
 
     /* Create the queues used to hold Rx/Tx characters. */
     xRxedChars = xQueueCreate(uxQueueLength, ( unsigned portBASE_TYPE ) sizeof( signed char ));
@@ -113,9 +110,9 @@ signed portBASE_TYPE xSerialPutChar(xComPortHandle pxPort, signed char cOutChar,
         xReturn = pdPASS;
         USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
         if (xQueueReceive(xCharsForTx, &cChar, 0) == pdTRUE) {
-        //    while (USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET) {
-        //    }
-            USART3->DR=cChar;
+            //    while (USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET) {
+            //    }  //如果使用轮询发送，就把这里注释解开
+            USART3->DR = cChar;
         }
     } else {
         xReturn = pdFAIL;
@@ -132,11 +129,9 @@ void vSerialClose(xComPortHandle xPort) {
 
 /*-----------------------------------------------------------*/
 
-void USART3_IRQHandler(void){
-    vUARTInterruptHandler();
-}
 
-void vUARTInterruptHandler(void) {
+
+void USART3_IRQHandler(void) {
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     char cChar;
 

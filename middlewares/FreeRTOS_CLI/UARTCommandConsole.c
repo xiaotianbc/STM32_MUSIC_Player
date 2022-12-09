@@ -86,6 +86,12 @@ static xComPortHandle xPort = 0;
 
 /*-----------------------------------------------------------*/
 
+/**
+ * 创建一个freeRTOS任务，用于执行命令行控制台，这个任务会定时检查串口输入并作出反馈。
+ * 需要提前初始化好串口，这个任务不包含串口的初始化部分
+ * @param usStackSize freeRTOS任务的栈大小
+ * @param uxPriority freeRTOS任务的优先级
+ */
 void vUARTCommandConsoleStart( uint16_t usStackSize, UBaseType_t uxPriority )
 {
 	/* Create the semaphore used to access the UART Tx. */
@@ -169,7 +175,8 @@ xComPortHandle xPort;
 				sent.  Clear the input string ready to receive the next command.
 				Remember the command that was just processed first in case it is
 				to be processed again. */
-				strcpy( cLastInputString, cInputString );
+                //因为指令长度的宏cmdMAX_INPUT_SIZE被配置为50，当指令长度超过50时调用strcpy函数便会访问非法地址，导致进入hardfalt中断
+				strncpy( cLastInputString, cInputString, cmdMAX_INPUT_SIZE);
 				ucInputIndex = 0;
 				memset( cInputString, 0x00, cmdMAX_INPUT_SIZE );
 

@@ -64,7 +64,7 @@ int32_t mcu_uart_open(int32_t comport) {
     USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);//开启中断
     //Usart3 NVIC 配置，主要是配置中断优先级
     NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 7;//抢占优先级 3
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 5;//抢占优先级 3
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3; //响应优先级 3
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //使能中断
     NVIC_Init(&NVIC_InitStructure); //执行NVIC配置
