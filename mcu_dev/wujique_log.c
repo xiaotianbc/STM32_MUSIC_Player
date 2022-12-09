@@ -35,7 +35,7 @@ static void uart_printf(int8_t *fmt, ...) {
         pt++;
     }
 
-    mcu_uart_write(PC_PORT, (u8 *) &string[0], length);  //Ð´´®¿Ú
+    mcu_uart_write(CP2102_PORT, (u8 *) &string[0], length);  //Ð´´®¿Ú
 
     va_end(ap);
 }
@@ -57,7 +57,7 @@ void wjq_log(LOG_L l, int8_t *fmt, ...) {
         pt++;
     }
 
-    mcu_uart_write(PC_PORT, (u8 *) &string[0], length);  //Ð´´®¿Ú
+    mcu_uart_write(CP2102_PORT, (u8 *) &string[0], length);  //Ð´´®¿Ú
 
     va_end(ap);
 }

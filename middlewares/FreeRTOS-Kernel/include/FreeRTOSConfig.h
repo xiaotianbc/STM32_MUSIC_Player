@@ -49,6 +49,7 @@
 #define configUSE_TRACE_FACILITY 1
 #define configUSE_STATS_FORMATTING_FUNCTIONS 1
 
+#define configCOMMAND_INT_MAX_OUTPUT_SIZE 500
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0

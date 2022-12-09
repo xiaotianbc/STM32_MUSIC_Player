@@ -54,12 +54,14 @@ unsigned int read_bytes = 0;
 char current_dir_str[256] = {0};
 
 char fatfs_test_command_paste_buffer[512];
+
 void fatfs_test(void *arg) {
     int32_t uart_caches_len;
     size_t ret;
+    printf_("fatfs_test_command_paste_buffer in task addr is 0x%X \n", &fatfs_test_command_paste_buffer);
+    printf_("value 2 in task addr is 0x%X \n", &ret);
     while (1) {
         uart_caches_len = mcu_uart_read(0, read_buff, 512);
-
         if (uart_caches_len == 0) {
             vTaskDelay(100);
             continue;
@@ -77,7 +79,7 @@ void fatfs_test(void *arg) {
         }
         if (uart_caches_len >= 4 && 0 == strncmp(read_buff, "free", 4)) {
             ret = xPortGetMinimumEverFreeHeapSize();
-            printf_("free mem: %d B\n", ret);
+            printf_("freeRTOS free Heap sie: %d B\n", ret);
         }
         if (uart_caches_len >= 5 && 0 == strncmp(read_buff, "water", 5)) {
             ret = uxTaskGetStackHighWaterMark(NULL);
@@ -88,7 +90,7 @@ void fatfs_test(void *arg) {
             mcu_uart_sendstr("name * state * priority * free-stack * create-order\n");
             vTaskList(fatfs_test_command_paste_buffer);
             printf_("%s\n", fatfs_test_command_paste_buffer);
-           // vTaskGetRunTimeState()
+            // vTaskGetRunTimeState()
         }
     }
 
@@ -150,11 +152,11 @@ HeapRegion_t xHeapRegions[] =
 
 int main(void) {
     //4位抢占优先级，0位相应优先级
-    __NVIC_SetPriorityGrouping(NVIC_PriorityGroup_4);
+    NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
     /* SysTick end of count event each ms */
     RCC_GetClocksFreq(&RCC_Clocks);
     SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);
-    mcu_uart_open(PC_PORT);
+    mcu_uart_open(CP2102_PORT);
 
 //    xTaskCreate(master_task_main,  /* 任务入口函数 */
 //                "MASTER",    /* 任务名字 */
@@ -163,8 +165,14 @@ int main(void) {
 //                1,  /* 任务的优先级 */
 //                NULL);  /* 任务控制块指针 */
     vPortDefineHeapRegions(xHeapRegions);
-    xTaskCreate(fatfs_test,  /* 任务入口函数 */
-                "fatfs_test",    /* 任务名字 */
+
+    extern void vRegisterSampleCLICommands( void );
+    vRegisterSampleCLICommands();
+    extern void vUARTCommandConsoleStart( uint16_t usStackSize, UBaseType_t uxPriority );
+    vUARTCommandConsoleStart( 512, 1 );
+
+    xTaskCreate(master_task_main,  /* 任务入口函数 */
+                "master_task_main",    /* 任务名字 */
                 4096,    /* 任务栈大小 */
                 NULL,        /* 任务入口函数参数 */
                 1,  /* 任务的优先级 */

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>   
                   
-#define PC_PORT  3 
+#define CP2102_PORT  3
 
 extern s32 mcu_uart_open (s32 comport);
 extern s32 mcu_uart_close (s32 comport);

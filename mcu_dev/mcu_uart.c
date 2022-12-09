@@ -12,12 +12,11 @@ volatile u16 UartHead3;//串口接收缓冲写指针
 volatile u16 UartEnd3;//串口接收缓冲读指针
 volatile uint8_t UartBuf3OverFg = 0;//缓冲溢出标志
 
+
 /**
- *@brief:      mcu_dev_uart_open
- *@details:    初始化串口
- *@param[in]   int32_t comport  
- *@param[out]  无
- *@retval:     
+ * 初始化串口时钟，外设，打开接收中断
+ * @param comport 需要打开的串口号
+ * @return
  */
 int32_t mcu_uart_open(int32_t comport) {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -65,7 +64,7 @@ int32_t mcu_uart_open(int32_t comport) {
     USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);//开启中断
     //Usart3 NVIC 配置，主要是配置中断优先级
     NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;//抢占优先级 3
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 7;//抢占优先级 3
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3; //响应优先级 3
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //使能中断
     NVIC_Init(&NVIC_InitStructure); //执行NVIC配置
@@ -223,7 +222,7 @@ int32_t mcu_uart_sendstr(char *buf) {
 }
 
 
-void USART3_IRQHandler(void) {
+void USART3_IRQHandler1(void) {
     unsigned short ch;
 
     if (USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)//判断是不是RXNE中断
