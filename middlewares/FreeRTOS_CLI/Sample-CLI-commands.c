@@ -58,7 +58,9 @@ static BaseType_t prvParameterEchoCommand(char *pcWriteBuffer, size_t xWriteBuff
 /*
  * 实现一个简单的打印hello world的命令.
  */
-static BaseType_t prvPrintHelloWorldNTimeCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t
+prvPrintHelloWorldNTimeCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+
 //  生成随机数
 static BaseType_t prvRandIntCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 
@@ -418,7 +420,8 @@ static BaseType_t prvParameterEchoCommand(char *pcWriteBuffer, size_t xWriteBuff
 }
 
 
-static BaseType_t prvPrintHelloWorldNTimeCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+static BaseType_t
+prvPrintHelloWorldNTimeCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
     const char *pcParameter;
     BaseType_t xParameterStringLength, xReturn;
     static UBaseType_t uxParameterNumber = 1; //第一次就获取第一个参数
@@ -470,8 +473,8 @@ static BaseType_t prvRandIntCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
     (void) xWriteBufferLen;
     configASSERT(pcWriteBuffer);
 
-    static  int n1;
-    static  int n2;
+    static int n1;
+    static int n2;
     int nr;
 
     /* Obtain the parameter string. */
@@ -488,18 +491,18 @@ static BaseType_t prvRandIntCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
         //把第一个参数拷贝到this_str里
         strncpy(this_str, pcParameter, xParameterStringLength);
 
-        if (uxParameterNumber ==1){
-            n1= atoi(this_str);
+        if (uxParameterNumber == 1) {
+            n1 = atoi(this_str);
             /* There are more parameters to return after this one. */
             xReturn = pdTRUE;
             uxParameterNumber++;
-        } else{
-            n2= atoi(this_str);
+        } else {
+            n2 = atoi(this_str);
             srand(xTaskGetTickCount());
-            nr=rand()%(n2-n1+1)+n1;
-            sprintf(pcWriteBuffer,"rand int(%d - %d) is %d \r\n",n1,n2,nr);
+            nr = rand() % (n2 - n1 + 1) + n1;
+            sprintf(pcWriteBuffer, "rand int(%d - %d) is %d \r\n", n1, n2, nr);
             xReturn = pdFALSE;
-            uxParameterNumber=1;
+            uxParameterNumber = 1;
         }
     }
 
