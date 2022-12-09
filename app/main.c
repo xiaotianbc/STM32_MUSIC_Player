@@ -128,14 +128,6 @@ int main(void) {
     //使用STM32F407的CCMRAM来保存FreeRTOS的堆空间，此API必须在所以FreeRTOS的API之前调用
     vPortDefineHeapRegions(xHeapRegions);
 
-//    xTaskCreate(master_task_main,  /* 任务入口函数 */
-//                "MASTER",    /* 任务名字 */
-//                1024,    /* 任务栈大小 */
-//                NULL,        /* 任务入口函数参数 */
-//                1,  /* 任务的优先级 */
-//                NULL);  /* 任务控制块指针 */
-
-
     vRegisterSampleCLICommands();
     vUARTCommandConsoleStart( 512, 1 );
 
