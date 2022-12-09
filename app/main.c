@@ -60,46 +60,13 @@ void fatfs_test(void *arg) {
     size_t ret;
     printf_("fatfs_test_command_paste_buffer in task addr is 0x%X \n", &fatfs_test_command_paste_buffer);
     printf_("value 2 in task addr is 0x%X \n", &ret);
-    while (1) {
-        uart_caches_len = mcu_uart_read(0, read_buff, 512);
-        if (uart_caches_len == 0) {
-            vTaskDelay(100);
-            continue;
-        }
-        if (uart_caches_len >= 4 && 0 == strncmp(read_buff, "help", 4)) {
-            printf_("STM32 command line ctrl interface:\n");
-            printf_("you can use some command like:\n");
-            printf_("pwd, ls, cat, echo, rm, touch, mkdir, free \n");
-        }
-        if (uart_caches_len >= 5 && 0 == strncmp(read_buff, "mount", 5)) {
-            printf_("got mount CMD\n");
-        }
-        if (uart_caches_len >= 3 && 0 == strncmp(read_buff, "off", 3)) {
-            printf_("got off CMD\n");
-        }
-        if (uart_caches_len >= 4 && 0 == strncmp(read_buff, "free", 4)) {
-            ret = xPortGetMinimumEverFreeHeapSize();
-            printf_("freeRTOS free Heap sie: %d B\n", ret);
-        }
-        if (uart_caches_len >= 5 && 0 == strncmp(read_buff, "water", 5)) {
-            ret = uxTaskGetStackHighWaterMark(NULL);
-            printf_("the minimun value in history of task's stack size remain is  %d B\n", ret);
-        }
-        if (uart_caches_len >= 3 && 0 == strncmp(read_buff, "top", 3)) {
-            mcu_uart_sendstr("******* TaskList ********\n");
-            mcu_uart_sendstr("name * state * priority * free-stack * create-order\n");
-            vTaskList(fatfs_test_command_paste_buffer);
-            printf_("%s\n", fatfs_test_command_paste_buffer);
-            // vTaskGetRunTimeState()
-        }
-    }
 
     FRESULT res;
-    if (FR_OK == f_mount(&fs, "0:", 1))//挂载SD卡到path: 0:，并创建文件系统对象的句柄
+    if (FR_OK == f_mount(&fs, "", 1))//挂载SD卡到path: 0:，并创建文件系统对象的句柄
     {
         printf("mount fs success!\n");
     }
-    res = f_opendir(&dp1, "0:");
+    res = f_opendir(&dp1, "");
     if (res != FR_OK) {
         printf_("f_opendir (&dp1, \"0:\") failed\n");
         goto endd;
@@ -120,7 +87,7 @@ void fatfs_test(void *arg) {
     }
 
     endd:
-    f_unmount("0:");
+    f_unmount("sda");
 //
 //    res = f_open(&fp, "0:/helloworld.txt", FA_READ | FA_WRITE);//挂载SD卡到path: 0:
 //    if (res == FR_OK) {
@@ -158,19 +125,22 @@ int main(void) {
     SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);
     mcu_uart_open(CP2102_PORT);
 
+    //使用STM32F407的CCMRAM来保存FreeRTOS的堆空间，此API必须在所以FreeRTOS的API之前调用
+    vPortDefineHeapRegions(xHeapRegions);
+
 //    xTaskCreate(master_task_main,  /* 任务入口函数 */
 //                "MASTER",    /* 任务名字 */
 //                1024,    /* 任务栈大小 */
 //                NULL,        /* 任务入口函数参数 */
 //                1,  /* 任务的优先级 */
 //                NULL);  /* 任务控制块指针 */
-    vPortDefineHeapRegions(xHeapRegions);
+
 
     vRegisterSampleCLICommands();
     vUARTCommandConsoleStart( 512, 1 );
 
-    xTaskCreate(master_task_main,  /* 任务入口函数 */
-                "master_task_main",    /* 任务名字 */
+    xTaskCreate(fatfs_test,  /* 任务入口函数 */
+                "fatfs_test",    /* 任务名字 */
                 4096,    /* 任务栈大小 */
                 NULL,        /* 任务入口函数参数 */
                 1,  /* 任务的优先级 */

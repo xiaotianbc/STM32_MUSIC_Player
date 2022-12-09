@@ -58,7 +58,9 @@ static BaseType_t prvParameterEchoCommand(char *pcWriteBuffer, size_t xWriteBuff
 /*
  * 实现一个简单的打印hello world的命令.
  */
-static BaseType_t prvPrintHelloWorldCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t prvPrintHelloWorldNTimeCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+//  生成随机数
+static BaseType_t prvRandIntCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 
 
 
@@ -80,8 +82,8 @@ static BaseType_t prvStartStopTraceCommand( char *pcWriteBuffer, size_t xWriteBu
 a table that gives information on each task in the system. */
 static const CLI_Command_Definition_t xTaskStats =
         {
-                "task-stats", /* The command string to type. */
-                "\r\ntask-stats:\r\n Displays a table showing the state of each FreeRTOS task\r\n",
+                "top", /* The command string to type. */
+                "\r\ntop:\r\n Displays a table showing the state of each FreeRTOS task\r\n",
                 prvTaskStatsCommand, /* The function to run. */
                 0 /* No parameters are expected. */
         };
@@ -109,12 +111,20 @@ static const CLI_Command_Definition_t xParameterEcho =
         };
 
 
-static const CLI_Command_Definition_t xPrintHelloWorld =
+static const CLI_Command_Definition_t xPrintHelloWorldNTime =
         {
-                "helloworld",
-                "\r\nhelloworld:\r\n print hello world to user console\r\n",
-                prvPrintHelloWorldCommand, /* The function to run. */
+                "helloworldn",
+                "\r\nhelloworldn:\r\n print n times hello world to user console\r\n",
+                prvPrintHelloWorldNTimeCommand, /* The function to run. */
                 1 /* 不接受额外的参数. */
+        };
+
+static const CLI_Command_Definition_t xRandInt =
+        {
+                "randint",
+                "\r\nrandint <param1> <param2>:\r\n Expects two parameters, echos a random number behind this \r\n",
+                prvRandIntCommand, /* The function to run. */
+                2 /* 不接受额外的参数. */
         };
 
 #if(configGENERATE_RUN_TIME_STATS == 1)
@@ -160,7 +170,8 @@ void vRegisterSampleCLICommands(void) {
     FreeRTOS_CLIRegisterCommand(&xTaskStats);
     FreeRTOS_CLIRegisterCommand(&xThreeParameterEcho);
     FreeRTOS_CLIRegisterCommand(&xParameterEcho);
-    FreeRTOS_CLIRegisterCommand(&xPrintHelloWorld);
+    FreeRTOS_CLIRegisterCommand(&xPrintHelloWorldNTime);
+    FreeRTOS_CLIRegisterCommand(&xRandInt);
 
 #if(configGENERATE_RUN_TIME_STATS == 1)
     {
@@ -407,7 +418,7 @@ static BaseType_t prvParameterEchoCommand(char *pcWriteBuffer, size_t xWriteBuff
 }
 
 
-static BaseType_t prvPrintHelloWorldCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+static BaseType_t prvPrintHelloWorldNTimeCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
     const char *pcParameter;
     BaseType_t xParameterStringLength, xReturn;
     static UBaseType_t uxParameterNumber = 1; //第一次就获取第一个参数
@@ -445,6 +456,56 @@ static BaseType_t prvPrintHelloWorldCommand(char *pcWriteBuffer, size_t xWriteBu
     xReturn = pdFALSE;
     return xReturn;
 }
+
+
+static BaseType_t prvRandIntCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+    const char *pcParameter;
+    BaseType_t xParameterStringLength, xReturn;
+    static UBaseType_t uxParameterNumber = 1; //第一次就获取第一个参数
+
+    /* Remove compile time warnings about unused parameters, and check the
+    write buffer is not NULL.  NOTE - for simplicity, this example assumes the
+    write buffer length is adequate, so does not check for buffer overflows. */
+    (void) pcCommandString;
+    (void) xWriteBufferLen;
+    configASSERT(pcWriteBuffer);
+
+    static  int n1;
+    static  int n2;
+    int nr;
+
+    /* Obtain the parameter string. */
+    pcParameter = FreeRTOS_CLIGetParameter
+            (
+                    pcCommandString,        /* The command string itself. */
+                    uxParameterNumber,        /* Return the next parameter. */
+                    &xParameterStringLength    /* Store the parameter string length. */
+            );
+
+    char this_str[10];
+    if (pcParameter != NULL) {
+        memset(pcWriteBuffer, 0x00, xWriteBufferLen);
+        //把第一个参数拷贝到this_str里
+        strncpy(this_str, pcParameter, xParameterStringLength);
+
+        if (uxParameterNumber ==1){
+            n1= atoi(this_str);
+            /* There are more parameters to return after this one. */
+            xReturn = pdTRUE;
+            uxParameterNumber++;
+        } else{
+            n2= atoi(this_str);
+            srand(xTaskGetTickCount());
+            nr=rand()%(n2-n1+1)+n1;
+            sprintf(pcWriteBuffer,"rand int(%d - %d) is %d \r\n",n1,n2,nr);
+            xReturn = pdFALSE;
+            uxParameterNumber=1;
+        }
+    }
+
+    return xReturn;
+}
+
 /*-----------------------------------------------------------*/
 
 #if configINCLUDE_TRACE_RELATED_CLI_COMMANDS == 1
