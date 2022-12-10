@@ -214,7 +214,7 @@ void USART3_IRQHandler(void) {
         dma_rx_cnt = USART_RX_DMA_MAX_LEN - DMA_GetCurrDataCounter(USARTx_RX_DMA_STREAM);
         //因为串口发送完成也会触发串口空闲中断，所以这里要判断一下接收到的长度是否大于0，不大于0说明实际上没有接收到数据
         if (dma_rx_cnt > 0) {
-         //   mcu_uart_send_buffer_dma(dma_rx_buffer,dma_rx_cnt);
+            //   mcu_uart_send_buffer_dma(dma_rx_buffer,dma_rx_cnt);
             lwrb_write(&usart_rx_rb, dma_rx_buffer, dma_rx_cnt);
         }
         DMA_ClearFlag(USARTx_RX_DMA_STREAM, DMA_FLAG_TCIF1);        /* 清DMA标志位 */
@@ -267,8 +267,8 @@ void _putchar(char character) {
     printf_buffer_index++;
     if (printf_buffer_index == 64 || character == '\n') {
         mcu_uart_send_buffer_dma(printf_buffer[printf_buffer_current_block], printf_buffer_index);
-        printf_buffer_index=0;
-        printf_buffer_current_block=1-printf_buffer_current_block;//手动切换双缓冲
+        printf_buffer_index = 0;
+        printf_buffer_current_block = 1 - printf_buffer_current_block;//手动切换双缓冲
     }
 }
 
