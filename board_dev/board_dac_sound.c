@@ -1,11 +1,13 @@
 //
 // Created by xiaotian on 2022/12/6.
+// 使用了DMA1-STREAM6作为DAC2的通道
 //
 
 #include <stddef.h>
 #include "board_dac_sound.h"
 #include "main.h"
 extern const unsigned char data[240816];
+
 
 
 /* Private function prototypes -----------------------------------------------*/

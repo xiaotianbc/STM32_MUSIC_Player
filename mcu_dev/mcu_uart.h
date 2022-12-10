@@ -16,5 +16,9 @@ extern s32 mcu_uart_set_baud (s32 comport, s32 baud, s32 databits, s32 parity, s
 extern s32 mcu_uart_tcflush (s32 comport);
 extern void mcu_uart_test(void);
 
+//DMA TX
+void mcu_uart_send_buffer_dma(uint8_t *buffer, uint32_t len);
+
+
 #endif
 

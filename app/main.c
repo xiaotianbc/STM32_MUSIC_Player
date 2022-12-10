@@ -115,15 +115,26 @@ HeapRegion_t xHeapRegions[] =
                 {NULL,                     0}
         };
 
-/* USER CODE END PV */
+
+void dummy_delay(void ){
+    volatile uint32_t cn=168*1000*100;
+    while (cn--){}
+}
 
 int main(void) {
-    //4位抢占优先级，0位相应优先级
+    //4位抢占优先级，0位响应优先级
     NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
-    /* SysTick end of count event each ms */
-    RCC_GetClocksFreq(&RCC_Clocks);
-    SysTick_Config(RCC_Clocks.HCLK_Frequency / 1000);
-    mcu_uart_open(CP2102_PORT);
+    //mcu_uart_open(CP2102_PORT);
+extern void usart_app(void);
+extern void ST_USART_Config(void);
+    ST_USART_Config();
+    while (1){
+        //usart_app();
+        mcu_uart_send_buffer_dma("Hello,\n",7);
+        dummy_delay();
+        mcu_uart_send_buffer_dma("world!\n",7);
+        dummy_delay();
+    }
 
     //使用STM32F407的CCMRAM来保存FreeRTOS的堆空间，此API必须在所以FreeRTOS的API之前调用
     vPortDefineHeapRegions(xHeapRegions);
