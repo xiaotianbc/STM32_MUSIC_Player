@@ -7,82 +7,26 @@
 #ifndef SERIAL_COMMS_H
 #define SERIAL_COMMS_H
 
-typedef void * xComPortHandle;
+typedef void *xComPortHandle;
 
-typedef enum
-{
-    serCOM1,
-    serCOM2,
-    serCOM3,
-    serCOM4,
-    serCOM5,
-    serCOM6,
-    serCOM7,
-    serCOM8
-} eCOMPort;
 
-typedef enum
-{
-    serNO_PARITY,
-    serODD_PARITY,
-    serEVEN_PARITY,
-    serMARK_PARITY,
-    serSPACE_PARITY
-} eParity;
+xComPortHandle xSerialPortInitMinimal(unsigned long ulWantedBaud,
+                                      unsigned portBASE_TYPE uxQueueLength);
 
-typedef enum
-{
-    serSTOP_1,
-    serSTOP_2
-} eStopBits;
+void vSerialPutString(xComPortHandle pxPort,
+                      const signed char *const pcString,
+                      unsigned short usStringLength);
 
-typedef enum
-{
-    serBITS_5,
-    serBITS_6,
-    serBITS_7,
-    serBITS_8
-} eDataBits;
+signed portBASE_TYPE xSerialGetChar(xComPortHandle pxPort,
+                                    signed char *pcRxedChar,
+                                    TickType_t xBlockTime);
 
-typedef enum
-{
-    ser50,
-    ser75,
-    ser110,
-    ser134,
-    ser150,
-    ser200,
-    ser300,
-    ser600,
-    ser1200,
-    ser1800,
-    ser2400,
-    ser4800,
-    ser9600,
-    ser19200,
-    ser38400,
-    ser57600,
-    ser115200
-} eBaud;
+signed portBASE_TYPE xSerialPutChar(xComPortHandle pxPort,
+                                    signed char cOutChar,
+                                    TickType_t xBlockTime);
 
-xComPortHandle xSerialPortInitMinimal( unsigned long ulWantedBaud,
-                                       unsigned portBASE_TYPE uxQueueLength );
-xComPortHandle xSerialPortInit( eCOMPort ePort,
-                                eBaud eWantedBaud,
-                                eParity eWantedParity,
-                                eDataBits eWantedDataBits,
-                                eStopBits eWantedStopBits,
-                                unsigned portBASE_TYPE uxBufferLength );
-void vSerialPutString( xComPortHandle pxPort,
-                       const signed char * const pcString,
-                       unsigned short usStringLength );
-signed portBASE_TYPE xSerialGetChar( xComPortHandle pxPort,
-                                     signed char * pcRxedChar,
-                                     TickType_t xBlockTime );
-signed portBASE_TYPE xSerialPutChar( xComPortHandle pxPort,
-                                     signed char cOutChar,
-                                     TickType_t xBlockTime );
-portBASE_TYPE xSerialWaitForSemaphore( xComPortHandle xPort );
-void vSerialClose( xComPortHandle xPort );
+portBASE_TYPE xSerialWaitForSemaphore(xComPortHandle xPort);
+
+void vSerialClose(xComPortHandle xPort);
 
 #endif /* ifndef SERIAL_COMMS_H */

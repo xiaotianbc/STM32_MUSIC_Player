@@ -83,9 +83,9 @@ DRESULT disk_read(
             // translate the arguments here
             if (count > 1)//读取多个扇区
             {
-                Status = SD_ReadMultiBlocks(buff, sector * 512, 512, count);
+                SD_ReadMultiBlocks(buff, sector * 512, 512, count);
             } else {
-                Status = SD_ReadBlock(buff, sector * 512, 512);
+                SD_ReadBlock(buff, sector * 512, 512);
             }
 
 

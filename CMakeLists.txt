@@ -67,12 +67,18 @@ include_directories(
 
         middlewares/ringbuffer
 
+        middlewares/CherryUSB/class/cdc
+        middlewares/CherryUSB/class/msc
+        middlewares/CherryUSB/core
+        middlewares/CherryUSB/common
+
 
         #fatfs
         middlewares/fatfs_R0.15
    #     Core/Inc Drivers/STM32F4xx_HAL_Driver/Inc Drivers/STM32F4xx_HAL_Driver/Inc/Legacy Drivers/CMSIS/Device/ST/STM32F4xx/Include Drivers/CMSIS/Include)
 )
-#add_definitions(-DUSE_HAL_DRIVER -DSTM32F407xx)
+
+add_definitions(-DCONFIG_USB_DWC2_PORT=FS_PORT)
 
 file(GLOB_RECURSE SOURCES
        app/*.*
@@ -98,6 +104,14 @@ file(GLOB_RECURSE SOURCES
         middlewares/FreeRTOS_CLI/*.c
 
         middlewares/ringbuffer/lwrb.c
+
+        middlewares/CherryUSB/core/usbd_core.c
+        middlewares/CherryUSB/class/cdc/usbd_cdc.c
+        middlewares/CherryUSB/class/msc/usbd_msc.c
+        middlewares/CherryUSB/port/dwc2/usb_dc_dwc2.c
+
+        middlewares/CherryUSB/demo/msc_ram_template.c
+
 
         #fatfs
         middlewares/fatfs_R0.15/*.c

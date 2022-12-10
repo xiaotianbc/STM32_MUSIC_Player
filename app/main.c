@@ -6,6 +6,7 @@
 #include "ff.h"
 #include "FreeRTOS_CLI_Public.h"
 #include "lwrb.h"
+#include "stm324xg_eval_sdio_sd.h"
 
 RCC_ClocksTypeDef RCC_Clocks;
 
@@ -60,7 +61,7 @@ void fatfs_test(void *arg) {
     int32_t uart_caches_len;
     size_t ret;
 
-    while (1) {
+    while (0) {
         vTaskDelay(1000);
     }
 
@@ -93,7 +94,7 @@ void fatfs_test(void *arg) {
     }
 
     endd:
-    f_unmount("sda");
+    f_unmount("");
 //
 //    res = f_open(&fp, "0:/helloworld.txt", FA_READ | FA_WRITE);//挂载SD卡到path: 0:
 //    if (res == FR_OK) {
@@ -127,6 +128,10 @@ int main(void) {
     //mcu_uart_open(CP2102_PORT);
     extern void ST_USART_Config(void);
     ST_USART_Config();
+
+    SD_Init();//先初始化SDIO
+    extern void msc_ram_init(void);
+    msc_ram_init();
 
     //使用STM32F407的CCMRAM来保存FreeRTOS的堆空间，此API必须在所以FreeRTOS的API之前调用
     vPortDefineHeapRegions(xHeapRegions);
