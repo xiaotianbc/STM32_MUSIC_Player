@@ -65,6 +65,8 @@ include_directories(
         middlewares/FreeRTOS-Kernel/portable/GCC/ARM_CM4F
         middlewares/FreeRTOS_CLI
 
+        middlewares/ringbuffer
+
 
         #fatfs
         middlewares/fatfs_R0.15
@@ -94,6 +96,8 @@ file(GLOB_RECURSE SOURCES
         middlewares/FreeRTOS-Kernel/portable/GCC/ARM_CM4F/port.c
         middlewares/FreeRTOS-Kernel/portable/MemMang/heap_5.c
         middlewares/FreeRTOS_CLI/*.c
+
+        middlewares/ringbuffer/lwrb.c
 
         #fatfs
         middlewares/fatfs_R0.15/*.c

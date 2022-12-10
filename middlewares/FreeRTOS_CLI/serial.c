@@ -18,6 +18,7 @@
 /* Demo application includes. */
 #include "serial.h"
 #include "mcu_uart.h"
+#include "lwrb.h"
 /*-----------------------------------------------------------*/
 
 /* Misc defines. */
@@ -68,7 +69,8 @@ signed portBASE_TYPE xSerialGetChar(xComPortHandle pxPort, signed char *pcRxedCh
 
     /* Get the next character from the buffer.  Return false if no characters
     are available, or arrive before xBlockTime expires. */
-    if (xQueueReceive(xRxedChars, pcRxedChar, xBlockTime)) {
+    // if (xQueueReceive(xRxedChars, pcRxedChar, xBlockTime)) {
+    if (lwrb_read(&usart_rx_rb, pcRxedChar, 1)) {
         //如果确实收到了，结果已经保存在入参的pcRxedChar 里，这里只需要返回成功这个结果就行
         return pdTRUE;
     } else {
@@ -78,24 +80,28 @@ signed portBASE_TYPE xSerialGetChar(xComPortHandle pxPort, signed char *pcRxedCh
 
 /*-----------------------------------------------------------*/
 
+//定义一个二维数组，用于DMA手动双缓冲发送，避免数据传输过程中被修改
+static uint8_t serial_put_string_nodma_cache[2][64] = {0};
+
 void vSerialPutString(xComPortHandle pxPort, const signed char *const pcString, unsigned short usStringLength) {
+    (void) pxPort;
     signed char *pxNext;
-
-    /* A couple of parameters that this port does not use. */
-    (void) usStringLength;
-    (void) pxPort;
-
-    /* NOTE: This implementation does not handle the queue being full as no
-    block time is used! */
-
-    /* The port handle is not required as this driver only supports UART1. */
-    (void) pxPort;
-
-    /* Send each character in the string, one at a time. */
     pxNext = (signed char *) pcString;
-    while (*pxNext) {
-        xSerialPutChar(pxPort, *pxNext, serNO_BLOCK);
-        pxNext++;
+
+    //手动设置DMA的双缓冲模式，每次传输完成后切换缓冲区，避免数据竞争
+    static uint8_t current_dma_buffer_index = 0;
+
+    while (usStringLength > 64) {
+        memcpy(serial_put_string_nodma_cache[current_dma_buffer_index], pxNext, 64);
+        mcu_uart_send_buffer_dma(serial_put_string_nodma_cache[current_dma_buffer_index], 64);
+        current_dma_buffer_index = 1 - current_dma_buffer_index; //切换当前操作的缓冲区
+        usStringLength -= 64;
+        pxNext += 64;
+    }
+    if (usStringLength > 0) {
+        memcpy(serial_put_string_nodma_cache[current_dma_buffer_index], pxNext, usStringLength);
+        mcu_uart_send_buffer_dma(serial_put_string_nodma_cache[current_dma_buffer_index], usStringLength);
+        current_dma_buffer_index = 1 - current_dma_buffer_index; //切换当前操作的缓冲区
     }
 }
 
@@ -104,20 +110,23 @@ void vSerialPutString(xComPortHandle pxPort, const signed char *const pcString, 
 signed portBASE_TYPE xSerialPutChar(xComPortHandle pxPort, signed char cOutChar, TickType_t xBlockTime) {
     signed portBASE_TYPE xReturn;
     uint8_t cChar;
-
-//把需要发送的字符串发送到 xCharsForTx 队列里
-    if (xQueueSend(xCharsForTx, &cOutChar, xBlockTime) == pdPASS) {
-        xReturn = pdPASS;
-        USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
-        if (xQueueReceive(xCharsForTx, &cChar, 0) == pdTRUE) {
-            //    while (USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET) {
-            //    }  //如果使用轮询发送，就把这里注释解开
-            USART3->DR = cChar;
-        }
-    } else {
-        xReturn = pdFAIL;
-    }
-
+//
+////把需要发送的字符串发送到 xCharsForTx 队列里
+//    if (xQueueSend(xCharsForTx, &cOutChar, xBlockTime) == pdPASS) {
+//        xReturn = pdPASS;
+//        USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
+//        if (xQueueReceive(xCharsForTx, &cChar, 0) == pdTRUE) {
+//            //    while (USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET) {
+//            //    }  //如果使用轮询发送，就把这里注释解开
+//            USART3->DR = cChar;
+//        }
+//    } else {
+//        xReturn = pdFAIL;
+//    }
+    // mcu_uart_send_buffer_dma(&cOutChar, 1);
+    //STM32的CCMRAM不能用DMA，转到普通内存区域再传输
+    serial_put_string_nodma_cache[0][0] = cOutChar;
+    mcu_uart_send_buffer_dma(serial_put_string_nodma_cache[0], 1);
     return xReturn;
 }
 
@@ -131,7 +140,7 @@ void vSerialClose(xComPortHandle xPort) {
 
 
 
-void USART3_IRQHandler(void) {
+void USART3_IRQHandler2(void) {
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     char cChar;
 

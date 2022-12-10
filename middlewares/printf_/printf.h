@@ -16,11 +16,7 @@ extern "C" {
  * \param character Character to output
  */
 //void _putchar(char character);
-__STATIC_FORCEINLINE void _putchar(char character) {
-    while (USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET) {
-    }
-    USART_SendData(USART3, character);
-}
+void _putchar(char character);
 
 /**
  * Tiny printf implementation

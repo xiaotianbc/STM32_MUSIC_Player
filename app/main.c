@@ -5,6 +5,7 @@
 #include "task.h"
 #include "ff.h"
 #include "FreeRTOS_CLI_Public.h"
+#include "lwrb.h"
 
 RCC_ClocksTypeDef RCC_Clocks;
 
@@ -58,6 +59,11 @@ char fatfs_test_command_paste_buffer[512];
 void fatfs_test(void *arg) {
     int32_t uart_caches_len;
     size_t ret;
+
+    while (1){
+        vTaskDelay(1000);
+    }
+
     printf_("fatfs_test_command_paste_buffer in task addr is 0x%X \n", &fatfs_test_command_paste_buffer);
     printf_("value 2 in task addr is 0x%X \n", &ret);
 
@@ -116,31 +122,25 @@ HeapRegion_t xHeapRegions[] =
         };
 
 
-void dummy_delay(void ){
-    volatile uint32_t cn=168*1000*100;
-    while (cn--){}
+void dummy_delay(void) {
+    volatile uint32_t cn = 168 * 1000 * 100;
+    while (cn--) {}
 }
+
+
 
 int main(void) {
     //4位抢占优先级，0位响应优先级
-    NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
     //mcu_uart_open(CP2102_PORT);
-extern void usart_app(void);
-extern void ST_USART_Config(void);
+    extern void ST_USART_Config(void);
     ST_USART_Config();
-    while (1){
-        //usart_app();
-        mcu_uart_send_buffer_dma("Hello,\n",7);
-        dummy_delay();
-        mcu_uart_send_buffer_dma("world!\n",7);
-        dummy_delay();
-    }
 
     //使用STM32F407的CCMRAM来保存FreeRTOS的堆空间，此API必须在所以FreeRTOS的API之前调用
     vPortDefineHeapRegions(xHeapRegions);
 
     vRegisterSampleCLICommands();
-    vUARTCommandConsoleStart( 512, 1 );
+    vUARTCommandConsoleStart(512, 1);
 
     xTaskCreate(fatfs_test,  /* 任务入口函数 */
                 "fatfs_test",    /* 任务名字 */

@@ -3,6 +3,7 @@
 #include "stm32f4xx_usart.h"
 #include "mcu_uart.h"
 #include "wujique_log.h"
+#include "main.h"
 
 
 //串口3  TX： DMA1_Stream3 RX DMA1_Stream1
@@ -70,10 +71,12 @@ uint8_t aTxBuffer[BUFFERSIZE] = "USART DMA Example: Communication between two US
 uint8_t aRxBuffer[BUFFERSIZE];
 __IO uint32_t TimeOut = 0x0;
 
-/* Uncomment the line below if you will use the USART in Transmitter Mode */
-#define USART_TRANSMITTER
-/* Uncomment the line below if you will use the USART in Receiver Mode */
-//#define USART_RECEIVER
+//串口DMA接收缓冲区
+#define USART_RX_DMA_MAX_LEN 4096
+uint8_t dma_rx_buffer[USART_RX_DMA_MAX_LEN] = {0};
+
+uint8_t ringbuffer_dma_rx_buffs[4096] = {0};
+lwrb_t usart_rx_rb;
 
 /**
   * @brief  Configures the USART Peripheral.
@@ -181,14 +184,52 @@ void ST_USART_Config(void) {
     /* 开启串口DMA发送功能 */
     USART_DMACmd(USARTx, USART_DMAReq_Tx, ENABLE);
 
+
+    //下面是串口空闲中断接收的代码
+    USART_ITConfig(USARTx, USART_IT_IDLE, ENABLE); //开启串口空闲中断
+    NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
+    NVIC_Init(&NVIC_InitStructure); //执行NVIC配置
+    /* Enable USART DMA RX Requsts */
+    USART_DMACmd(USARTx, USART_DMAReq_Rx, ENABLE);
+
+
+    DMA_MemoryTargetConfig(USARTx_RX_DMA_STREAM, (uint32_t) dma_rx_buffer,
+                           DMA_Memory_0);
+    DMA_SetCurrDataCounter(USARTx_RX_DMA_STREAM, USART_RX_DMA_MAX_LEN);
+    /* Enable DMA USART RX Stream */
+    DMA_Cmd(USARTx_RX_DMA_STREAM, ENABLE);
+
+    /* Enable USART DMA RX Requsts */
+    USART_DMACmd(USARTx, USART_DMAReq_Rx, ENABLE);
+
+    //初始化串口接收ringbuffer
+    lwrb_init(&usart_rx_rb, ringbuffer_dma_rx_buffs, sizeof(ringbuffer_dma_rx_buffs));
 }
+
+void USART3_IRQHandler(void) {
+    uint16_t dma_rx_cnt; //实际DMA接收到的值
+    if (USART_GetITStatus(USART3, USART_IT_IDLE) == SET) {//判断是不是进了空闲中断
+        DMA_Cmd(USARTx_RX_DMA_STREAM, DISABLE); /* 暂时关闭dma，这个操作不会影响下面获取Counter等行为 */
+        //用GetCurrDataCounter获取DMA剩余想要接收的个数，实际接收到的值是总共要接收的值减去这个
+        dma_rx_cnt = USART_RX_DMA_MAX_LEN - DMA_GetCurrDataCounter(USARTx_RX_DMA_STREAM);
+        //因为串口发送完成也会触发串口空闲中断，所以这里要判断一下接收到的长度是否大于0，不大于0说明实际上没有接收到数据
+        if (dma_rx_cnt > 0) {
+         //   mcu_uart_send_buffer_dma(dma_rx_buffer,dma_rx_cnt);
+            lwrb_write(&usart_rx_rb, dma_rx_buffer, dma_rx_cnt);
+        }
+        DMA_ClearFlag(USARTx_RX_DMA_STREAM, DMA_FLAG_TCIF1);        /* 清DMA标志位 */
+        DMA_SetCurrDataCounter(USARTx_RX_DMA_STREAM, USART_RX_DMA_MAX_LEN);    /* 重新赋值计数值，必须大于等于最大可能接收到的数据帧数目 */
+        DMA_Cmd(USARTx_RX_DMA_STREAM, ENABLE);                    /*打开DMA*/
+        USART_ReceiveData(USART3);                        //清除空闲中断标志位（接收函数有清标志位的作用）
+    }
+}
+
 
 //DMA传输繁忙标志位
 static volatile uint8_t USART3_TX_DMA_IS_BUSY = 0;
 
 void DMA1_Stream3_IRQHandler(void) {
-    ITStatus ret = DMA_GetITStatus(USARTx_TX_DMA_STREAM, DMA_IT_TCIF3);
-    if (ret == SET) {
+    if (DMA_GetITStatus(USARTx_TX_DMA_STREAM, DMA_IT_TCIF3) != RESET) {
         //清除中断标志位
         DMA_ClearITPendingBit(USARTx_TX_DMA_STREAM, DMA_IT_TCIF3);
         /* Clear DMA Transfer Complete Flags */
@@ -200,13 +241,12 @@ void DMA1_Stream3_IRQHandler(void) {
     }
 }
 
-
 /**
  * 使用DMA发送一段buffer到串口
  * @param buffer
- * @param len buffer长度
+ * @param len buffer长度，最大不超过65535
  */
-void mcu_uart_send_buffer_dma(uint8_t *buffer, uint32_t len) {
+void mcu_uart_send_buffer_dma(uint8_t *buffer, uint16_t len) {
     while (USART3_TX_DMA_IS_BUSY);
     USART3_TX_DMA_IS_BUSY = 1;
 
@@ -217,42 +257,17 @@ void mcu_uart_send_buffer_dma(uint8_t *buffer, uint32_t len) {
     DMA_Cmd(USARTx_TX_DMA_STREAM, ENABLE);
 }
 
-void usart_app(void) {
+static uint8_t printf_buffer[128];
+static uint8_t printf_buffer_index = 0;
 
-
-#ifdef USART_RECEIVER
-
-    /* Enable DMA USART RX Stream */
-  DMA_Cmd(USARTx_RX_DMA_STREAM,ENABLE);
-
-  /* Enable USART DMA RX Requsts */
-  USART_DMACmd(USARTx, USART_DMAReq_Rx, ENABLE);
-
-  /* Waiting the end of Data transfer */
-  while (USART_GetFlagStatus(USARTx,USART_FLAG_TC)==RESET);
-  while (DMA_GetFlagStatus(USARTx_RX_DMA_STREAM,USARTx_RX_DMA_FLAG_TCIF)==RESET);
-
-  /* Clear DMA Transfer Complete Flags */
-  DMA_ClearFlag(USARTx_RX_DMA_STREAM,USARTx_RX_DMA_FLAG_TCIF);
-  /* Clear USART Transfer Complete Flags */
-  USART_ClearFlag(USARTx,USART_FLAG_TC);
-
-  if (Buffercmp(aTxBuffer, aRxBuffer, BUFFERSIZE) != FAILED)
-  {
-    /* Turn ON LED2 */
-    STM_EVAL_LEDOn(LED2);
-  }
-  else
-  {
-    /* Turn ON LED3 */
-    STM_EVAL_LEDOn(LED3);
-  }
-
-#endif /* USART_RECEIVER */
-
-//    while (1)
-//    {
-//    }
+void _putchar(char character) {
+    while (USART3_TX_DMA_IS_BUSY); //因为只用了一个缓冲区，所以需要等待DMA传输完成才能再修改缓冲区
+    printf_buffer[printf_buffer_index] = character;
+    printf_buffer_index++;
+    if (printf_buffer_index == sizeof(printf_buffer) || character == '\n') {
+        mcu_uart_send_buffer_dma(printf_buffer, printf_buffer_index);
+        printf_buffer_index=0;
+    }
 }
 
 /**
