@@ -257,16 +257,18 @@ void mcu_uart_send_buffer_dma(uint8_t *buffer, uint16_t len) {
     DMA_Cmd(USARTx_TX_DMA_STREAM, ENABLE);
 }
 
-static uint8_t printf_buffer[128];
-static uint8_t printf_buffer_index = 0;
 
+static uint8_t printf_buffer[2][64];
+static uint8_t printf_buffer_index = 0;
+static uint8_t printf_buffer_current_block = 0; //手动切换双缓冲
 void _putchar(char character) {
-    while (USART3_TX_DMA_IS_BUSY); //因为只用了一个缓冲区，所以需要等待DMA传输完成才能再修改缓冲区
-    printf_buffer[printf_buffer_index] = character;
+    //while (USART3_TX_DMA_IS_BUSY); //因为只用了一个缓冲区，所以需要等待DMA传输完成才能再修改缓冲区
+    printf_buffer[printf_buffer_current_block][printf_buffer_index] = character;
     printf_buffer_index++;
-    if (printf_buffer_index == sizeof(printf_buffer) || character == '\n') {
-        mcu_uart_send_buffer_dma(printf_buffer, printf_buffer_index);
+    if (printf_buffer_index == 64 || character == '\n') {
+        mcu_uart_send_buffer_dma(printf_buffer[printf_buffer_current_block], printf_buffer_index);
         printf_buffer_index=0;
+        printf_buffer_current_block=1-printf_buffer_current_block;//手动切换双缓冲
     }
 }
 

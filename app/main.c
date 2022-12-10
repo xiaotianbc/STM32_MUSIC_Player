@@ -136,6 +136,20 @@ int main(void) {
     extern void ST_USART_Config(void);
     ST_USART_Config();
 
+    while (1){
+        printf_("In April, 四月里，\n"
+                "Come he will, 它就来了，\n"
+                "In May, 五月里，\n"
+                "Sing all day, 整天吟唱多逍遥，\n"
+                "In June, 六月里，\n"
+                "Change his tune, 它在改变曲调，\n"
+                "In July, 七月里，\n"
+                "Prepare to fly, 准备飞翔，\n"
+                "In August, 八月里，\n"
+                "Go he must! 它就得离去了!\n"
+                "～by Mother Goose's Nursery Rhyme\n");
+    }
+
     //使用STM32F407的CCMRAM来保存FreeRTOS的堆空间，此API必须在所以FreeRTOS的API之前调用
     vPortDefineHeapRegions(xHeapRegions);
 
