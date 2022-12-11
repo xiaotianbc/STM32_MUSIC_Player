@@ -8,6 +8,7 @@
 #include "lwrb.h"
 #include "stm324xg_eval_sdio_sd.h"
 #include "board_fatfs_interface.h"
+#include "board_dac_sound.h"
 
 RCC_ClocksTypeDef RCC_Clocks;
 
@@ -59,7 +60,6 @@ HeapRegion_t xHeapRegions[] =
 int main(void) {
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);//4位抢占优先级，0位响应优先级
     //mcu_uart_open(CP2102_PORT);
-    extern void ST_USART_Config(void);//初始化UART
     ST_USART_Config();
 
     SD_Init();//初始化SDIO

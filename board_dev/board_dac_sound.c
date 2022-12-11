@@ -4,10 +4,14 @@
 //
 
 #include <stddef.h>
+#include <string.h>
 #include "board_dac_sound.h"
 #include "main.h"
-extern const unsigned char data[240816];
+#include "ff.h"
+#include "board_fatfs_interface.h"
 
+
+extern const unsigned char data[240816];
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -15,8 +19,6 @@ static void TIM6_Config(void);
 
 
 /* Private functions ---------------------------------------------------------*/
-
-volatile uint8_t is_dac_dma_working_flag = 0;
 
 DAC_InitTypeDef DAC_InitStructure;
 DMA_InitTypeDef DMA_InitStructure;
@@ -47,7 +49,7 @@ void DAC_Start_DMA_init(void) {
             {
                     .NVIC_IRQChannel = DMA1_Stream6_IRQn,
                     .NVIC_IRQChannelCmd = ENABLE,
-                    .NVIC_IRQChannelPreemptionPriority = 1,
+                    .NVIC_IRQChannelPreemptionPriority = 6,
                     .NVIC_IRQChannelSubPriority = 1
             };
     NVIC_Init(&NVIC_InitStruct);
@@ -60,6 +62,8 @@ void DAC_Start_DMA_init(void) {
     /* Enable DMA for DAC Channel2 */
     DAC_DMACmd(DAC_Channel_2, ENABLE);
 }
+
+QueueHandle_t dma_working_handle;
 
 /**
  * 因为DMA_SxNDTR寄存器只有16位，所以如果需要传的数据量大于16位，需要分包传输
@@ -80,23 +84,27 @@ void DAC_Start_DMA(const uint8_t *Memory0BaseAddr, uint32_t BUFFER_SIZE) {
 
     /* Enable DMA1_Stream6 */
     DMA_Cmd(DMA1_Stream6, ENABLE);
-    is_dac_dma_working_flag = 1;
 }
 
 void DMA1_Stream6_IRQHandler() {
     if (DMA_GetITStatus(DMA1_Stream6, DMA_IT_TCIF6) != 0) {
         DMA_ClearITPendingBit(DMA1_Stream6, DMA_IT_TCIF6);
-        is_dac_dma_working_flag = 0;
+        //向队列发送一个完成的指针
+        xQueueSendToBackFromISR(dma_working_handle, "o", NULL);
     }
 }
 
 
-#define        BUFFER_SIZE        (1024)
+#define        BUFFER_SIZE        (2048)
+
+uint8_t music_buffer[2][BUFFER_SIZE];
+uint8_t current_dma_flag = 0;
+static FIL fp;
 
 /**
  * 播放一段wav音乐的程序，程序上电后，只执行一次，把所有音乐播放完
  */
-void Music_Player(void) {
+void Music_Player(char *fileName) {
     /* Preconfiguration before using DAC----------------------------------------*/
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -113,7 +121,27 @@ void Music_Player(void) {
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
+    dma_working_handle = xQueueCreate(1, 1);
 
+    FRESULT res;
+    UINT br;
+    fatfs_mount_init();
+    res = f_open(&fp, fileName, FA_READ);
+    if (res != FR_OK) {
+        printf_("open %s file failed\r\n", fileName);
+        goto task_del;
+    } else {
+        printf_("open %s file ok\r\n", fileName);
+    }
+
+    res = f_read(&fp, music_buffer[0], 2048, &br);
+    if (res == FR_OK && br == 2048) { //开始查找子数组
+
+    } else {
+        if (res != FR_OK) //如果是打开有问题，直接退出
+            goto task_del;
+        //到这里说明打开没有问题，只是文件长度不够，但是对于播放音乐来说，不合理
+    }
     uint32_t DataLength = 0;
     uint8_t *DataAddress = NULL;
 
@@ -122,20 +150,26 @@ void Music_Player(void) {
     TIM6_Config();
     DAC_Start_DMA_init();
 
+    xQueueSendToBack(dma_working_handle, "o", NULL);
     //每次DMA传输BUFFER_SIZE个字节
-    while (DataLength >= BUFFER_SIZE) {
-        DataLength -= BUFFER_SIZE;
-        DataAddress += BUFFER_SIZE;
-        DAC_Start_DMA((uint8_t *) DataAddress, BUFFER_SIZE);
-        while (is_dac_dma_working_flag != 0);
-    }
-    if (DataLength > 0) {
-        DAC_Start_DMA((uint8_t *) DataAddress, DataLength);
-        while (is_dac_dma_working_flag != 0);
+    while (1) {
+        f_read(&fp, music_buffer[current_dma_flag], 2048, &br);
+        for (int i = 0; i < br; ++i) {
+            music_buffer[current_dma_flag][i] /= 8;  //降低音量
+        }
+        if (br == 0)
+            break;
+        //等待传输完成，阻塞在这里
+        xQueueReceive(dma_working_handle, &res, portMAX_DELAY);
+        DAC_Start_DMA((uint8_t *) music_buffer[current_dma_flag], br);
+        current_dma_flag = 1 - current_dma_flag; //手动切换dma双缓冲
     }
 
+    task_del:
+    fatfs_Deinit();
     TIM_Cmd(TIM6, DISABLE);
     DAC_DMACmd(DAC_Channel_2, DISABLE);
+    vTaskDelete(NULL);
 }
 
 

@@ -11,9 +11,11 @@
 
 static FIL fp;
 
-uint8_t music_buffer[2][2048];
+static uint8_t music_buffer[2][2048];
 
 void task_play_music(char *arg) {
+
+
     FRESULT res;
     UINT br;
     fatfs_mount_init();

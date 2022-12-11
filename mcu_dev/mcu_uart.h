@@ -8,6 +8,8 @@
 
 #define CP2102_PORT  3
 
+void ST_USART_Config(void);
+
 extern s32 mcu_uart_open(s32 comport);
 
 extern s32 mcu_uart_close(s32 comport);

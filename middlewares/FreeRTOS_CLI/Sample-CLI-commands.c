@@ -543,6 +543,7 @@ static BaseType_t prvRandIntCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 #include "freeRTOS_app_task.h"
 #include "board_fatfs_interface.h"
 #include "printf.h"
+#include "board_dac_sound.h"
 
 static BaseType_t prvPlayMusicCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
     const char *pcParameter;
@@ -575,7 +576,7 @@ static BaseType_t prvPlayMusicCommand(char *pcWriteBuffer, size_t xWriteBufferLe
         //把第一个参数拷贝到this_str里
         strncpy(this_str, pcParameter, xParameterStringLength);
 
-        xTaskCreate(task_play_music,  /* 任务入口函数 */
+        xTaskCreate(Music_Player,  /* 任务入口函数 */
                     "playmusic",    /* 任务名字 */
                     4096,    /* 任务栈大小 */
                     this_str,        /* 任务入口函数参数 */

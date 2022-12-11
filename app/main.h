@@ -25,6 +25,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx.h"
 #include "printf.h"
+
+//freeRTOS
+#include "FreeRTOS.h"
+#include "task.h"
+#include "timers.h"
+#include "queue.h"
+
+
 //#include "core_cm4.h"
 //#include "cmsis_gcc.h"
 #include "common_tool.h"
