@@ -541,6 +541,7 @@ static BaseType_t prvRandIntCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 }
 
 #include "freeRTOS_app_task.h"
+#include "board_fatfs_interface.h"
 
 static BaseType_t prvPlayMusicCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
     const char *pcParameter;
@@ -582,20 +583,7 @@ static BaseType_t prvLsCommand(char *pcWriteBuffer, size_t xWriteBufferLen, cons
     (void) xWriteBufferLen;
     configASSERT(pcWriteBuffer);
 
-    //获取task_ls的句柄
-    TaskHandle_t ls_task_handle = xTaskGetHandle("task_ls");
-
-    if (ls_task_handle == NULL) {  //如果发现任务不存在
-        xTaskCreate(task_ls,  /* 任务入口函数 */
-                    "task_ls",    /* 任务名字 */
-                    512,    /* 任务栈大小 */
-                    NULL,        /* 任务入口函数参数 */
-                    1,  /* 任务的优先级 */
-                    &ls_task_handle);  /* 任务控制块指针 */
-    } else {
-        vTaskResume(ls_task_handle); //根据句柄来恢复任务
-    }
-
+    fatfs_ls(pcWriteBuffer);
 
     xReturn = pdFALSE;
     return xReturn;

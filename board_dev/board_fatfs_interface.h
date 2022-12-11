@@ -7,5 +7,5 @@
 
 void fatfs_Deinit(void);
 void fatfs_mount_init(void);
-void fatfs_ls(void);
+void fatfs_ls(char * output_buffer);
 #endif //DAC_PLAY_MUSIC_BOARD_FATFS_INTERFACE_H

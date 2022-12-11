@@ -53,35 +53,12 @@ signed portBASE_TYPE xSerialGetChar(xComPortHandle pxPort, signed char *pcRxedCh
 
     /* Get the next character from the buffer.  Return false if no characters
     are available, or arrive before xBlockTime expires. */
-
-    while (0) {
-        //如果确实收到了，结果已经保存在入参的pcRxedChar 里，这里只需要返回成功这个结果就行
-        result = lwrb_read(&usart_rx_rb, pcRxedChar, 1);
-        if (result != 0) {//说明收到了
-            return pdTRUE;
-        }
-        vTaskDelay(1);
-        xBlockTime--;
-        if (xBlockTime == 0) {
-            return pdFALSE;
-        }
-    }
-
     if (xQueueReceive(xRxedChars, pcRxedChar, xBlockTime)) {
         return pdTRUE;
     } else {
         return pdFALSE;
     }
 
-//
-//    while (lwrb_read(&usart_rx_rb, pcRxedChar, 1))
-//
-//    if (lwrb_read(&usart_rx_rb, pcRxedChar, 1)) {
-//
-//
-//    } else {
-//
-//    }
 }
 
 /*-----------------------------------------------------------*/

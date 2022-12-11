@@ -7,13 +7,7 @@
 #include "task.h"
 #include "board_fatfs_interface.h"
 
-void task_ls(void *arg) {
-    while (1) {
-        fatfs_ls();
-        vTaskSuspend(NULL); //把自己挂起
-    }
-    vTaskDelete(NULL);
-}
+
 
 void task_play_music(void *arg) {
 

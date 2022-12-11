@@ -34,29 +34,33 @@ void fatfs_mount_init(void) {
 /**
  * fatfs list current dir
  */
-void fatfs_ls(void) {
+void fatfs_ls(char *output_buffer) {
+    int pos;
     fatfs_mount_init();  //重新挂载，防止被msc更改后无法获取最新内容
     res = f_opendir(&current_dir, "");                        /* Open a directory */
     if (res != FR_OK) {
-        printf_("opendir failed\r\n");
+        sprintf_(output_buffer, "opendir failed\r\n");
         return;
     }
     while (1) {
         res = f_readdir(&current_dir, &fno);
         if (res != FR_OK) {
-            printf_("f_readdir (&current_dir, &fno) failed\r\n");
+            sprintf_(output_buffer, "f_readdir (&current_dir, &fno) failed\r\n");
             return;
         }
         if (strlen(fno.fname) < 1) {
-            printf_("end of dir\r\n");
+            strcat(output_buffer, "end of dir\r\n");
             return;
         }
         if (fno.fattrib & AM_DIR) { //判断是不是文件夹
-            printf_("D: %s \t\t\t", fno.fname);
+            pos = sprintf_(output_buffer, "D: %s \t\t\t", fno.fname);
+            output_buffer += pos;
         } else {
-            printf_("F: %s \t\t\t", fno.fname);
+            pos = sprintf_(output_buffer, "F: %s \t\t\t", fno.fname);
+            output_buffer += pos;
         }
-        printf_("size:%llu\r\n", fno.fsize);
+        pos = sprintf_(output_buffer, "size:%llu\r\n", fno.fsize);
+        output_buffer += pos;
     }
 }
 
