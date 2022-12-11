@@ -43,7 +43,7 @@
 /* Exported macro ------------------------------------------------------------*/
 #define ATCCM __attribute__((section (".ccmram")))
 /* Exported functions ------------------------------------------------------- */
-
+extern void msc_ram_init(void);  //初始化USB-MSC
 
 
 #endif /* __MAIN_H */

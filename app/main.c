@@ -1,14 +1,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "mcu_uart.h"
-#include "FreeRTOS.h"
-#include "task.h"
 #include "ff.h"
 #include "FreeRTOS_CLI_Public.h"
-#include "lwrb.h"
 #include "stm324xg_eval_sdio_sd.h"
-#include "board_fatfs_interface.h"
-#include "board_dac_sound.h"
 
 RCC_ClocksTypeDef RCC_Clocks;
 
@@ -60,15 +55,13 @@ HeapRegion_t xHeapRegions[] =
 int main(void) {
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);//4位抢占优先级，0位响应优先级
     //mcu_uart_open(CP2102_PORT);
-    ST_USART_Config();
+    ST_USART_Config(); //初始化UART
 
     SD_Init();//初始化SDIO
-    extern void msc_ram_init(void);  //初始化USB-MSC
-    msc_ram_init();
+    msc_ram_init();//初始化USB-MSC内存卡功能
 
     //使用STM32F407的CCMRAM来保存FreeRTOS的堆空间，此API必须在所有FreeRTOS的API之前调用
     vPortDefineHeapRegions(xHeapRegions);
-
     vRegisterSampleCLICommands();  //注册freeRTOS-cli的命令
     vUARTCommandConsoleStart(512, 1);//启动freeRTOS-cli任务
     vTaskStartScheduler();//启动freeRTOS任务调度器

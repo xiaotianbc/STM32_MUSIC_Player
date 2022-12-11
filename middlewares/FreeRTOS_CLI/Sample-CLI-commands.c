@@ -536,11 +536,9 @@ static BaseType_t prvRandIntCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
             uxParameterNumber = 1;
         }
     }
-
     return xReturn;
 }
 
-#include "freeRTOS_app_task.h"
 #include "board_fatfs_interface.h"
 #include "printf.h"
 #include "board_dac_sound.h"
