@@ -26,7 +26,7 @@
 
 /* UART interrupt handler. */
 //void vUARTInterruptHandler(void);
-
+QueueHandle_t xRxedChars;
 /*-----------------------------------------------------------*/
 
 /*
@@ -34,6 +34,11 @@
  */
 xComPortHandle xSerialPortInitMinimal(unsigned long ulWantedBaud, unsigned portBASE_TYPE uxQueueLength) {
     xComPortHandle xReturn = 0;
+
+    //创建一个最大深度为uxQueueLength，单个消息长度为signed char 的队列
+    //Notes: 该项目中当前uxQueueLength为25
+    xRxedChars = xQueueCreate(uxQueueLength, ( unsigned portBASE_TYPE ) sizeof( signed char ));
+
     /* 当前demo只支持1个串口，但是为了遵守头文件的约定，还是返回一个值. */
     return xReturn;
 }
@@ -44,15 +49,39 @@ signed portBASE_TYPE xSerialGetChar(xComPortHandle pxPort, signed char *pcRxedCh
     /* The port handle is not required as this driver only supports one port. */
     (void) pxPort;
 
+    size_t result;
+
     /* Get the next character from the buffer.  Return false if no characters
     are available, or arrive before xBlockTime expires. */
 
-    if (lwrb_read(&usart_rx_rb, pcRxedChar, 1)) {
+    while (0) {
         //如果确实收到了，结果已经保存在入参的pcRxedChar 里，这里只需要返回成功这个结果就行
+        result = lwrb_read(&usart_rx_rb, pcRxedChar, 1);
+        if (result != 0) {//说明收到了
+            return pdTRUE;
+        }
+        vTaskDelay(1);
+        xBlockTime--;
+        if (xBlockTime == 0) {
+            return pdFALSE;
+        }
+    }
+
+    if (xQueueReceive(xRxedChars, pcRxedChar, xBlockTime)) {
         return pdTRUE;
     } else {
         return pdFALSE;
     }
+
+//
+//    while (lwrb_read(&usart_rx_rb, pcRxedChar, 1))
+//
+//    if (lwrb_read(&usart_rx_rb, pcRxedChar, 1)) {
+//
+//
+//    } else {
+//
+//    }
 }
 
 /*-----------------------------------------------------------*/

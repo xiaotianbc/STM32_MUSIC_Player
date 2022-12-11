@@ -4,7 +4,9 @@
 #include "mcu_uart.h"
 #include "wujique_log.h"
 #include "main.h"
-
+#include "FreeRTOS.h"
+#include "queue.h"
+#include "serial.h"
 
 //串口3  TX： DMA1_Stream3 RX DMA1_Stream1
 
@@ -207,6 +209,7 @@ void ST_USART_Config(void) {
 }
 
 void USART3_IRQHandler(void) {
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     uint16_t dma_rx_cnt; //实际DMA接收到的值
     if (USART_GetITStatus(USART3, USART_IT_IDLE) == SET) {//判断是不是进了空闲中断
         DMA_Cmd(USARTx_RX_DMA_STREAM, DISABLE); /* 暂时关闭dma，这个操作不会影响下面获取Counter等行为 */
@@ -217,6 +220,14 @@ void USART3_IRQHandler(void) {
             //   mcu_uart_send_buffer_dma(dma_rx_buffer,dma_rx_cnt);
             lwrb_write(&usart_rx_rb, dma_rx_buffer, dma_rx_cnt);
         }
+
+        //有可能是用户输入的字符，放进消息队列里
+        if (dma_rx_cnt > 0 && dma_rx_cnt < 25) {
+            for (int i = 0; i < dma_rx_cnt; ++i) {
+                xQueueSendFromISR(xRxedChars, dma_rx_buffer + i, &xHigherPriorityTaskWoken);
+            }
+        }
+
         DMA_ClearFlag(USARTx_RX_DMA_STREAM, DMA_FLAG_TCIF1);        /* 清DMA标志位 */
         DMA_SetCurrDataCounter(USARTx_RX_DMA_STREAM, USART_RX_DMA_MAX_LEN);    /* 重新赋值计数值，必须大于等于最大可能接收到的数据帧数目 */
         DMA_Cmd(USARTx_RX_DMA_STREAM, ENABLE);                    /*打开DMA*/

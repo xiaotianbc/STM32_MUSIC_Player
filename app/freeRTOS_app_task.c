@@ -12,16 +12,15 @@ void task_ls(void *arg) {
         fatfs_ls();
         vTaskSuspend(NULL); //把自己挂起
     }
-
     vTaskDelete(NULL);
 }
 
 void task_play_music(void *arg) {
-    fatfs_mount_init();
 
     for (int i = 0; i < 10; ++i) {
+        fatfs_mount_init();
         printf_("Hello, task\r\n");
-        vTaskDelay(1000);
+        vTaskDelay(100);
     }
 
     vTaskDelete(NULL);

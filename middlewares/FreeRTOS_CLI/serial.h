@@ -9,6 +9,8 @@
 
 typedef void *xComPortHandle;
 
+extern QueueHandle_t xRxedChars;
+
 
 xComPortHandle xSerialPortInitMinimal(unsigned long ulWantedBaud,
                                       unsigned portBASE_TYPE uxQueueLength);

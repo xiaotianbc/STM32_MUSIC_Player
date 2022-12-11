@@ -44,7 +44,11 @@ void master_task_main(void *arg) {
 /* Private function prototypes -----------------------------------------------*/
 
 
-
+void app_id(void *a) {
+    while (1){
+        vTaskDelay(1000);
+    };
+}
 
 
 /* USER CODE BEGIN PV */
@@ -71,7 +75,46 @@ int main(void) {
 
     vRegisterSampleCLICommands();  //注册freeRTOS-cli的命令
     vUARTCommandConsoleStart(512, 1);//启动freeRTOS-cli任务
-
+    xTaskCreate(app_id,  /* 任务入口函数 */
+                "app_main",    /* 任务名字 */
+                512,    /* 任务栈大小 */
+                NULL,        /* 任务入口函数参数 */
+                1,  /* 任务的优先级 */
+                NULL);  /* 任务控制块指针 */
     vTaskStartScheduler();//启动freeRTOS任务调度器
     for (;;) {}
 }
+
+#if 0
+void demo_task(void *a) {
+    //用0.5秒打印10次demo task 然后删除任务
+    for (int i = 0; i < 10; ++i) {
+        printf_("demo task\r\n");
+        vTaskDelay(50);
+    }
+    vTaskDelete(NULL);
+}
+
+void app_main(void *a) {
+    //每隔1秒钟创建一个demo_task
+    while (1) {
+        xTaskCreate(demo_task,  /* 任务入口函数 */
+                    "task_ls",    /* 任务名字 */
+                    4096,    /* 任务栈大小 */
+                    NULL,        /* 任务入口函数参数 */
+                    1,  /* 任务的优先级 */
+                    NULL);  /* 任务控制块指针 */
+        vTaskDelay(1000);
+    }
+}
+
+void main1(void) {
+    xTaskCreate(app_main,  /* 任务入口函数 */
+                "app_main",    /* 任务名字 */
+                512,    /* 任务栈大小 */
+                NULL,        /* 任务入口函数参数 */
+                1,  /* 任务的优先级 */
+                NULL);  /* 任务控制块指针 */
+    vTaskStartScheduler();//启动freeRTOS任务调度器
+}
+#endif
