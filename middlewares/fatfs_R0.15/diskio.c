@@ -52,10 +52,10 @@ DSTATUS disk_initialize(
 
     switch (pdrv) {
         case DEV_SDIO_TF :
-            result = SD_Init();
-            if (result != SD_OK)
-                return 1;
-            else
+           // result = SD_Init();
+           // if (result != SD_OK)
+            //    return 1;
+           // else
                 return 0;
         default:
             return 0;

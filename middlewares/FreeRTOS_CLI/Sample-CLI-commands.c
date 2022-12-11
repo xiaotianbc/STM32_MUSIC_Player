@@ -64,6 +64,12 @@ prvPrintHelloWorldNTimeCommand(char *pcWriteBuffer, size_t xWriteBufferLen, cons
 //  生成随机数
 static BaseType_t prvRandIntCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 
+//  播放音乐
+static BaseType_t prvPlayMusicCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+
+//  列出文件
+static BaseType_t prvLsCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+
 
 
 /*
@@ -129,6 +135,23 @@ static const CLI_Command_Definition_t xRandInt =
                 2 /* 不接受额外的参数. */
         };
 
+
+static const CLI_Command_Definition_t xPlayMusic =
+        {
+                "playmusic",
+                "\r\nplaymusic <param1>:\r\n play a wav music: \r\n",
+                prvPlayMusicCommand, /* The function to run. */
+                0 /* 不接受额外的参数. */
+        };
+
+static const CLI_Command_Definition_t xLs =
+        {
+                "ls",
+                "\r\nls:\r\n list files in sd card \r\n",
+                prvLsCommand, /* The function to run. */
+                0 /* 不接受额外的参数. */
+        };
+
 #if(configGENERATE_RUN_TIME_STATS == 1)
 /* Structure that defines the "run-time-stats" command line command.   This
 generates a table that shows how much run time each task has */
@@ -170,10 +193,12 @@ static const CLI_Command_Definition_t xStartStopTrace =
 void vRegisterSampleCLICommands(void) {
     /* Register all the command line commands defined immediately above. */
     FreeRTOS_CLIRegisterCommand(&xTaskStats);
-    FreeRTOS_CLIRegisterCommand(&xThreeParameterEcho);
-    FreeRTOS_CLIRegisterCommand(&xParameterEcho);
-    FreeRTOS_CLIRegisterCommand(&xPrintHelloWorldNTime);
+    //FreeRTOS_CLIRegisterCommand(&xThreeParameterEcho);
+   // FreeRTOS_CLIRegisterCommand(&xParameterEcho);
+   // FreeRTOS_CLIRegisterCommand(&xPrintHelloWorldNTime);
     FreeRTOS_CLIRegisterCommand(&xRandInt);
+    FreeRTOS_CLIRegisterCommand(&xPlayMusic);
+    FreeRTOS_CLIRegisterCommand(&xLs);
 
 #if(configGENERATE_RUN_TIME_STATS == 1)
     {
@@ -508,6 +533,64 @@ static BaseType_t prvRandIntCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 
     return xReturn;
 }
+
+#include "freeRTOS_app_task.h"
+
+static BaseType_t prvPlayMusicCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+    const char *pcParameter;
+    BaseType_t xParameterStringLength, xReturn;
+    static UBaseType_t uxParameterNumber = 1; //第一次就获取第一个参数
+
+    /* Remove compile time warnings about unused parameters, and check the
+    write buffer is not NULL.  NOTE - for simplicity, this example assumes the
+    write buffer length is adequate, so does not check for buffer overflows. */
+    (void) pcCommandString;
+    (void) xWriteBufferLen;
+    configASSERT(pcWriteBuffer);
+
+    static int n1;
+    static int n2;
+    int nr;
+
+    xTaskCreate(task_play_music,  /* 任务入口函数 */
+                "playmusic",    /* 任务名字 */
+                4096,    /* 任务栈大小 */
+                NULL,        /* 任务入口函数参数 */
+                1,  /* 任务的优先级 */
+                NULL);  /* 任务控制块指针 */
+
+
+    xReturn = pdFALSE;
+    return xReturn;
+}
+
+static BaseType_t prvLsCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
+    const char *pcParameter;
+    BaseType_t xParameterStringLength, xReturn;
+    static UBaseType_t uxParameterNumber = 1; //第一次就获取第一个参数
+
+    /* Remove compile time warnings about unused parameters, and check the
+    write buffer is not NULL.  NOTE - for simplicity, this example assumes the
+    write buffer length is adequate, so does not check for buffer overflows. */
+    (void) pcCommandString;
+    (void) xWriteBufferLen;
+    configASSERT(pcWriteBuffer);
+
+    static int n1;
+    static int n2;
+    int nr;
+
+    xTaskCreate(task_ls,  /* 任务入口函数 */
+                "task_ls",    /* 任务名字 */
+                4096,    /* 任务栈大小 */
+                NULL,        /* 任务入口函数参数 */
+                1,  /* 任务的优先级 */
+                NULL);  /* 任务控制块指针 */
+
+    xReturn = pdFALSE;
+    return xReturn;
+}
+
 
 /*-----------------------------------------------------------*/
 

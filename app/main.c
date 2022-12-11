@@ -7,6 +7,7 @@
 #include "FreeRTOS_CLI_Public.h"
 #include "lwrb.h"
 #include "stm324xg_eval_sdio_sd.h"
+#include "board_fatfs_interface.h"
 
 RCC_ClocksTypeDef RCC_Clocks;
 
@@ -44,57 +45,8 @@ void master_task_main(void *arg) {
 
 
 
-
-FATFS fs;//文件系统对象
-DIR dp1;
-FIL fp;//文件对象
-FILINFO fno;
-char *write_text = "FATFS test success!";
-unsigned int write_bytes = 0;
-char read_buff[512];
-unsigned int read_bytes = 0;
-char current_dir_str[256] = {0};
-
-char fatfs_test_command_paste_buffer[512];
-
 void fatfs_test(void *arg) {
-    int32_t uart_caches_len;
-    size_t ret;
 
-    while (0) {
-        vTaskDelay(1000);
-    }
-
-    printf_("fatfs_test_command_paste_buffer in task addr is 0x%X \n", &fatfs_test_command_paste_buffer);
-    printf_("value 2 in task addr is 0x%X \n", &ret);
-
-    FRESULT res;
-    if (FR_OK == f_mount(&fs, "", 1))//挂载SD卡到path: 0:，并创建文件系统对象的句柄
-    {
-        printf("mount fs success!\n");
-    }
-    res = f_opendir(&dp1, "");
-    if (res != FR_OK) {
-        printf_("f_opendir (&dp1, \"0:\") failed\n");
-        goto endd;
-    }
-    while (1) {
-        res = f_readdir(&dp1, &fno);
-        if (res != FR_OK) {
-            printf_("f_readdir (&dp1, &fno) failed\n");
-            goto endd;
-        }
-        if (strlen(fno.fname) < 1) {
-            printf_("end of dir\n");
-            goto endd;
-        }
-        printf_("file name:%s\n", fno.fname);
-        printf_("file size:%llu\n", fno.fsize);
-        vTaskDelay(1000);
-    }
-
-    endd:
-    f_unmount("");
 //
 //    res = f_open(&fp, "0:/helloworld.txt", FA_READ | FA_WRITE);//挂载SD卡到path: 0:
 //    if (res == FR_OK) {
@@ -106,7 +58,9 @@ void fatfs_test(void *arg) {
 //        f_write(&fp, read_buff, read_bytes, &read_bytes);    /* Write data to the file */
 //        f_sync(&fp);
 //    }
+    fatfs_mount_init();
     while (1) {
+        fatfs_ls();
         vTaskDelay(1000);
     }
 }
@@ -139,12 +93,12 @@ int main(void) {
     vRegisterSampleCLICommands();
     vUARTCommandConsoleStart(512, 1);
 
-    xTaskCreate(fatfs_test,  /* 任务入口函数 */
-                "fatfs_test",    /* 任务名字 */
-                4096,    /* 任务栈大小 */
-                NULL,        /* 任务入口函数参数 */
-                1,  /* 任务的优先级 */
-                NULL);  /* 任务控制块指针 */
+//    xTaskCreate(fatfs_test,  /* 任务入口函数 */
+//                "fatfs_test",    /* 任务名字 */
+//                4096,    /* 任务栈大小 */
+//                NULL,        /* 任务入口函数参数 */
+//                1,  /* 任务的优先级 */
+//                NULL);  /* 任务控制块指针 */
     vTaskStartScheduler();
     for (;;) {}
 }
