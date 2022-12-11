@@ -5,6 +5,6 @@
 #ifndef DAC_PLAY_MUSIC_FREERTOS_APP_TASK_H
 #define DAC_PLAY_MUSIC_FREERTOS_APP_TASK_H
 
-void task_play_music(void *arg);
+void task_play_music(char *arg);
 void task_ls(void *arg);
 #endif //DAC_PLAY_MUSIC_FREERTOS_APP_TASK_H

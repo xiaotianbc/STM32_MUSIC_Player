@@ -138,10 +138,10 @@ static const CLI_Command_Definition_t xRandInt =
 
 static const CLI_Command_Definition_t xPlayMusic =
         {
-                "playmusic",
-                "\r\nplaymusic <param1>:\r\n play a wav music: \r\n",
+                "play",
+                "\r\nplay <param1>:\r\n play a wav music: \r\n",
                 prvPlayMusicCommand, /* The function to run. */
-                0 /* 不接受额外的参数. */
+                1 /* 不接受额外的参数. */
         };
 
 static const CLI_Command_Definition_t xLs =
@@ -542,6 +542,7 @@ static BaseType_t prvRandIntCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 
 #include "freeRTOS_app_task.h"
 #include "board_fatfs_interface.h"
+#include "printf.h"
 
 static BaseType_t prvPlayMusicCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString) {
     const char *pcParameter;
@@ -559,12 +560,29 @@ static BaseType_t prvPlayMusicCommand(char *pcWriteBuffer, size_t xWriteBufferLe
     static int n2;
     int nr;
 
-    xTaskCreate(task_play_music,  /* 任务入口函数 */
-                "playmusic",    /* 任务名字 */
-                4096,    /* 任务栈大小 */
-                NULL,        /* 任务入口函数参数 */
-                1,  /* 任务的优先级 */
-                NULL);  /* 任务控制块指针 */
+    //获取参数字符串，第一个参数是从哪里获取，默认是pcCommandString
+    //第二个参数是获取第几个Parameter，然后把获取到的字符串长度放在第三个引用参数里
+    pcParameter = FreeRTOS_CLIGetParameter
+            (
+                    pcCommandString,        /* The command string itself. */
+                    uxParameterNumber,        /* Return the next parameter. */
+                    &xParameterStringLength    /* Store the parameter string length. */
+            );
+
+    static char this_str[30];
+    if (pcParameter != NULL) {
+        memset(this_str, 0x00, 30);
+        //把第一个参数拷贝到this_str里
+        strncpy(this_str, pcParameter, xParameterStringLength);
+
+        xTaskCreate(task_play_music,  /* 任务入口函数 */
+                    "playmusic",    /* 任务名字 */
+                    4096,    /* 任务栈大小 */
+                    this_str,        /* 任务入口函数参数 */
+                    1,  /* 任务的优先级 */
+                    NULL);  /* 任务控制块指针 */
+
+    }
 
 
     xReturn = pdFALSE;
