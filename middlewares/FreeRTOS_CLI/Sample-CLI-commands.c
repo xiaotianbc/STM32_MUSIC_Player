@@ -194,8 +194,8 @@ void vRegisterSampleCLICommands(void) {
     /* Register all the command line commands defined immediately above. */
     FreeRTOS_CLIRegisterCommand(&xTaskStats);
     //FreeRTOS_CLIRegisterCommand(&xThreeParameterEcho);
-   // FreeRTOS_CLIRegisterCommand(&xParameterEcho);
-   // FreeRTOS_CLIRegisterCommand(&xPrintHelloWorldNTime);
+    // FreeRTOS_CLIRegisterCommand(&xParameterEcho);
+    // FreeRTOS_CLIRegisterCommand(&xPrintHelloWorldNTime);
     FreeRTOS_CLIRegisterCommand(&xRandInt);
     FreeRTOS_CLIRegisterCommand(&xPlayMusic);
     FreeRTOS_CLIRegisterCommand(&xLs);
@@ -232,6 +232,11 @@ static BaseType_t prvTaskStatsCommand(char *pcWriteBuffer, size_t xWriteBufferLe
     (void) xWriteBufferLen;
     configASSERT(pcWriteBuffer);
 
+    char cheap_size[20] = {0};  // display free heap size in menu top
+    sprintf(cheap_size, "\r\nfree heap: %d B\r\n", xPortGetFreeHeapSize());
+    strcpy(pcWriteBuffer, cheap_size);
+    pcWriteBuffer += strlen(cheap_size);
+
     /* Generate a table of task stats. */
     strcpy(pcWriteBuffer, "Task");
     pcWriteBuffer += strlen(pcWriteBuffer);
@@ -249,6 +254,7 @@ static BaseType_t prvTaskStatsCommand(char *pcWriteBuffer, size_t xWriteBufferLe
     }
     strcpy(pcWriteBuffer, pcHeader);
     vTaskList(pcWriteBuffer + strlen(pcHeader));
+
 
     /* There is no more data to return after this single string, so return
     pdFALSE. */
@@ -576,16 +582,20 @@ static BaseType_t prvLsCommand(char *pcWriteBuffer, size_t xWriteBufferLen, cons
     (void) xWriteBufferLen;
     configASSERT(pcWriteBuffer);
 
-    static int n1;
-    static int n2;
-    int nr;
+    //获取task_ls的句柄
+    TaskHandle_t ls_task_handle = xTaskGetHandle("task_ls");
 
-    xTaskCreate(task_ls,  /* 任务入口函数 */
-                "task_ls",    /* 任务名字 */
-                4096,    /* 任务栈大小 */
-                NULL,        /* 任务入口函数参数 */
-                1,  /* 任务的优先级 */
-                NULL);  /* 任务控制块指针 */
+    if (ls_task_handle == NULL) {  //如果发现任务不存在
+        xTaskCreate(task_ls,  /* 任务入口函数 */
+                    "task_ls",    /* 任务名字 */
+                    512,    /* 任务栈大小 */
+                    NULL,        /* 任务入口函数参数 */
+                    1,  /* 任务的优先级 */
+                    &ls_task_handle);  /* 任务控制块指针 */
+    } else {
+        vTaskResume(ls_task_handle); //根据句柄来恢复任务
+    }
+
 
     xReturn = pdFALSE;
     return xReturn;

@@ -8,7 +8,11 @@
 #include "board_fatfs_interface.h"
 
 void task_ls(void *arg) {
-    fatfs_ls();
+    while (1) {
+        fatfs_ls();
+        vTaskSuspend(NULL); //把自己挂起
+    }
+
     vTaskDelete(NULL);
 }
 

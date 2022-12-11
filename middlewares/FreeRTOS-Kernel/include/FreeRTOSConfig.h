@@ -73,6 +73,7 @@ to exclude the API function. */
 
 #define INCLUDE_xTaskGetCurrentTaskHandle   1
 #define INCLUDE_uxTaskGetStackHighWaterMark 1
+#define INCLUDE_xTaskGetHandle 1
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS
